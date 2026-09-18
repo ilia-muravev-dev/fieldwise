@@ -4,7 +4,8 @@ Monorepo: `backend/` (Python 3.12, uv, FastAPI, SQLAlchemy 2 sync + psycopg 3, C
 and `web/` (Next.js). Postgres with pgvector and Redis run from `docker-compose.yml`.
 
 ## Commands
-- `just up` — Postgres + Redis; `just check` — everything CI runs; `just backend-fix` — ruff fixes + format
+- `just up` — Postgres + Redis; `just app` — the whole stack in Docker (migrate, API :8000, worker);
+  `just check` — everything CI runs; `just backend-fix` — ruff fixes + format; `just openapi` — regenerate the contract
 - `cd backend && uv run fieldwise --help` — the CLI: `db`, `schemas`, `ingest`, `ocr`, `extract`, `eval`
 - `uv run fieldwise eval run --prompt v1 --limit 20 --cassette record` — measure; `eval compare a b` — the README table
 - Tests: `uv run pytest` (unit) — integration tests need Docker and are marked `integration`

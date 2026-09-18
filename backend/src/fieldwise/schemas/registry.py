@@ -6,6 +6,7 @@ from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 
 from fieldwise.db.models import Schema
 from fieldwise.schemas.compiler import CompiledSchema, compile_schema
@@ -46,6 +47,10 @@ def upsert_schema(session: Session, authored: dict[str, Any]) -> Schema:
     compiled = compile_schema(authored)
     latest = get_schema(session, compiled.name)
     if latest is not None and latest.json_schema == authored:
+        if json.dumps(latest.json_schema) != json.dumps(authored):
+            latest.json_schema = authored  # same schema, restore the authored key order
+            flag_modified(latest, "json_schema")  # dict equality would hide the reorder
+            session.flush()
         return latest
     schema = Schema(
         name=compiled.name,

@@ -116,6 +116,20 @@ def ingest_cord(
 
 
 @app.command()
+def openapi(
+    output: Annotated[Path, typer.Argument(help="Where to write the OpenAPI document.")] = Path(
+        "openapi.json"
+    ),
+) -> None:
+    """Write the API contract (the web client is generated from it)."""
+    from fieldwise.api.app import create_app  # noqa: PLC0415
+
+    document = create_app().openapi()
+    output.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    console.print(f"wrote {output} ({len(document.get('paths', {}))} paths)")
+
+
+@app.command()
 def embed(
     split: Annotated[str | None, typer.Option(help="Only documents of this split.")] = None,
     limit: Annotated[int | None, typer.Option(help="Stop after N documents.")] = None,

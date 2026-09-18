@@ -77,6 +77,7 @@ def prepare_extraction(
     options: ExtractionOptions,
     provider_name: str,
     examples: list[FewShotExample] | None = None,
+    run: ExtractionRun | None = None,
 ) -> PreparedExtraction:
     spec = get_prompt(options.prompt)
     compiled = compile_schema(schema.json_schema)
@@ -84,19 +85,17 @@ def prepare_extraction(
     use_ocr_text = spec.use_ocr_text if options.use_ocr_text is None else options.use_ocr_text
     examples = (examples or [])[:fewshot_k]
 
-    run = ExtractionRun(
-        document_id=document.id,
-        schema_id=schema.id,
-        prompt_version=spec.name,
-        model=options.model,
-        effort=options.effort,
-        fewshot_k=len(examples),
-        use_ocr_text=use_ocr_text,
-        provider=provider_name,
-        status="running",
-        fewshot_document_ids=[e.document_id for e in examples],
-    )
-    session.add(run)
+    if run is None:
+        run = ExtractionRun(document_id=document.id, schema_id=schema.id)
+        session.add(run)
+    run.prompt_version = spec.name
+    run.model = options.model
+    run.effort = options.effort
+    run.fewshot_k = len(examples)
+    run.use_ocr_text = use_ocr_text
+    run.provider = provider_name
+    run.status = "running"
+    run.fewshot_document_ids = [e.document_id for e in examples]
     session.flush()
 
     request = build_request(

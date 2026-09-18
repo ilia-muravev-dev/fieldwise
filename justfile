@@ -7,9 +7,13 @@ default:
 up:
     docker compose up -d --wait db redis
 
+# Start everything: database, redis, migrations, API, worker (and the web app when present)
+app:
+    docker compose --profile app up -d --build --wait
+
 # Stop everything
 down:
-    docker compose down
+    docker compose --profile app down
 
 # Lint, types and tests for the backend
 backend-check:
@@ -19,9 +23,21 @@ backend-check:
 backend-fix:
     cd backend && uv run ruff check --fix . && uv run ruff format .
 
+# Regenerate the API contract the web client is built from
+openapi:
+    cd backend && uv run fieldwise openapi ../openapi.json
+
+# Fail when openapi.json is stale (CI runs this)
+openapi-check:
+    cd backend && uv run fieldwise openapi /tmp/fieldwise-openapi.json >/dev/null && diff -q /tmp/fieldwise-openapi.json ../openapi.json
+
 # Everything CI runs
-check: backend-check
+check: backend-check openapi-check
 
 # Run the API locally with reload
 api:
     cd backend && uv run uvicorn fieldwise.api.app:app --reload --port 8000
+
+# Run the worker locally
+worker:
+    cd backend && uv run celery -A fieldwise.worker.app:celery_app worker --loglevel=info --concurrency=2
