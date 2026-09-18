@@ -19,6 +19,8 @@ def _empty_for(schema: dict[str, Any]) -> Any:
         return {key: _empty_for(child) for key, child in schema.get("properties", {}).items()}
     if schema.get("type") == "array":
         return []
+    if schema.get("type") == "string":
+        return ""  # a required string (the evidence quotes) cannot be null
     return None
 
 

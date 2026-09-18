@@ -1,4 +1,11 @@
+import json
+
+from fieldwise.extraction.builder import with_evidence
+from fieldwise.extraction.factory import empty_answer
+from fieldwise.extraction.pipeline import parse_output
+from fieldwise.extraction.provider import LLMRequest
 from fieldwise.gate.bundle import GateBaseline, compare_to_baseline
+from fieldwise.schemas.registry import compile_builtin
 
 
 def baseline(**overrides: object) -> GateBaseline:
@@ -36,3 +43,10 @@ def test_missing_numbers_are_skipped_and_round_trip() -> None:
     current = baseline(per_field={"tax": 1.0}, overall_accuracy=None)
     assert compare_to_baseline(current, baseline(), tolerance=0.02) == []
     assert GateBaseline.from_dict(baseline().to_dict()) == baseline()
+
+
+def test_fake_answer_is_valid_for_every_prompt() -> None:
+    compiled = compile_builtin("receipt")
+    for schema in (compiled.strict, with_evidence(compiled)):
+        request = LLMRequest(model="m", system="", content=[], output_schema=schema)
+        parse_output(json.dumps(empty_answer(request)), schema)
