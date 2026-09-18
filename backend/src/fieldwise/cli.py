@@ -24,7 +24,10 @@ from fieldwise.evals.runner import EvalConfig, labelled_documents, run_eval
 from fieldwise.extraction.factory import build_provider, describe
 from fieldwise.extraction.pipeline import ExtractionOptions, prepare_extraction, run_extraction
 from fieldwise.extraction.pricing import price_for
+from fieldwise.extraction.prompts.registry import get_prompt
 from fieldwise.logging import configure_logging
+from fieldwise.retrieval.embeddings import FastEmbedder
+from fieldwise.retrieval.fewshot import embed_documents, make_retriever
 from fieldwise.schemas.registry import compile_builtin, get_schema, sync_builtins
 from fieldwise.storage import get_storage
 
@@ -112,6 +115,19 @@ def ingest_cord(
                 console.print(f"  [red]{error}[/red]")
 
 
+@app.command()
+def embed(
+    split: Annotated[str | None, typer.Option(help="Only documents of this split.")] = None,
+    limit: Annotated[int | None, typer.Option(help="Stop after N documents.")] = None,
+    force: Annotated[bool, typer.Option(help="Re-embed documents that already have one.")] = False,
+) -> None:
+    """Embed OCR text (fastembed, bge-small, on the CPU) for few-shot retrieval."""
+    with session_factory()() as session:
+        count = embed_documents(session, FastEmbedder(), split=split, limit=limit, force=force)
+        session.commit()
+    console.print(f"embedded {count} document(s)")
+
+
 @ingest_app.command("remap")
 def ingest_remap(schema: Annotated[str, typer.Option(help="Schema name.")] = "receipt") -> None:
     """Re-map stored dataset annotations after a parser or mapper change."""
@@ -185,6 +201,7 @@ def extract(
     provider: Annotated[str | None, typer.Option(help="anthropic | fake.")] = None,
     cassette: Annotated[str | None, typer.Option(help="off | record | replay.")] = None,
     ocr_text: Annotated[bool | None, typer.Option(help="Force OCR text on/off.")] = None,
+    fewshot: Annotated[int | None, typer.Option(help="Override the few-shot k.")] = None,
 ) -> None:
     """Extract one document and print the result with tokens, cost and latency."""
     settings = get_settings()
@@ -198,14 +215,23 @@ def extract(
         model=model or settings.default_model,
         effort=effort or settings.default_effort,
         use_ocr_text=ocr_text,
+        fewshot_k=fewshot,
     )
     with session_factory()() as session:
         row = _find_document(session, document)
         schema_row = get_schema(session, schema)
         if schema_row is None:
             raise typer.BadParameter(f"schema {schema!r} is not in the database")
+        k = get_prompt(prompt).fewshot_k if fewshot is None else fewshot
+        examples = make_retriever(session, schema_row, FastEmbedder())(row, k) if k else []
         run = run_extraction(
-            session, get_storage(), row, schema=schema_row, options=options, provider=llm
+            session,
+            get_storage(),
+            row,
+            schema=schema_row,
+            options=options,
+            provider=llm,
+            examples=examples,
         )
         session.commit()
         console.print(
@@ -328,8 +354,16 @@ def eval_run_command(
             def on_status(status: str, processing: int) -> None:
                 bar.update(task, description=f"batch {status} ({processing} processing)")
 
+            schema_row = get_schema(session, config.schema)
+            retriever = make_retriever(session, schema_row, FastEmbedder()) if schema_row else None
             run = run_eval(
-                session, storage, config, llm, progress=progress, on_batch_status=on_status
+                session,
+                storage,
+                config,
+                llm,
+                retriever=retriever,
+                progress=progress,
+                on_batch_status=on_status,
             )
         session.commit()
         print_summary(console, run)

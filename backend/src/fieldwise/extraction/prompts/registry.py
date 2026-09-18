@@ -36,6 +36,15 @@ PROMPTS: dict[str, PromptSpec] = {
         ),
         use_ocr_text=True,
     ),
+    "v3": PromptSpec(
+        name="v3",
+        notes=(
+            "v2 plus three few-shot examples: the most similar labelled receipts (by OCR-text "
+            "embedding, never from the test split) with their golden output."
+        ),
+        use_ocr_text=True,
+        fewshot_k=3,
+    ),
 }
 
 

@@ -29,6 +29,7 @@ from fieldwise.extraction.pipeline import (
     finish_extraction,
     prepare_extraction,
 )
+from fieldwise.extraction.prompts.registry import get_prompt
 from fieldwise.extraction.provider import LLMError, LLMProvider, LLMRequest, LLMResponse
 from fieldwise.schemas.compiler import CompiledSchema, compile_schema
 
@@ -204,9 +205,11 @@ def run_eval(
     session.add(eval_run)
     session.flush()
 
+    spec = get_prompt(config.prompt)
+    fewshot_k = spec.fewshot_k if options.fewshot_k is None else options.fewshot_k
     prepared: list[tuple[PreparedExtraction, dict[str, Any], int]] = []
     for document, golden in documents:
-        examples = retriever(document, options.fewshot_k or 0) if retriever else []
+        examples = retriever(document, fewshot_k) if retriever and fewshot_k else []
         for rep in range(1, config.reps + 1):
             item = prepare_extraction(
                 session,
