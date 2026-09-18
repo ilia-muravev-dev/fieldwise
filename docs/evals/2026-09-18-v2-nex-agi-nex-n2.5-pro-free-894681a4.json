@@ -1,0 +1,272 @@
+{
+  "id": "894681a4-b7d5-41d4-8c28-f0c3dd5b3cd5",
+  "prompt_version": "v2",
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "effort": "low",
+  "fewshot_k": 0,
+  "use_ocr_text": true,
+  "provider": "openrouter",
+  "split": "test",
+  "mode": "sync",
+  "doc_count": 20,
+  "reps": 1,
+  "succeeded": 18,
+  "truncated": 0,
+  "failed": 2,
+  "overall_accuracy": 0.910828025477707,
+  "lenient_accuracy": 0.9171974522292994,
+  "value_accuracy": 0.9505494505494505,
+  "doc_exact_rate": 0.5,
+  "cost_usd": 0.0,
+  "cost_per_doc": 0.0,
+  "p50_ms": 23214,
+  "p95_ms": 80562,
+  "per_field": {
+    "tax": {
+      "matcher": "money",
+      "n": 18,
+      "accuracy": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "lenient": 1.0,
+      "value_n": 8,
+      "value_accuracy": 1.0,
+      "counts": {
+        "correct": 8,
+        "null_match": 10
+      }
+    },
+    "total": {
+      "matcher": "money",
+      "n": 18,
+      "accuracy": 0.9444444444444444,
+      "ci": [
+        0.7424220019799247,
+        0.9901250641690756
+      ],
+      "lenient": 0.9444444444444444,
+      "value_n": 17,
+      "value_accuracy": 0.9411764705882353,
+      "counts": {
+        "correct": 16,
+        "null_match": 1,
+        "missing": 1
+      }
+    },
+    "change": {
+      "matcher": "money",
+      "n": 18,
+      "accuracy": 0.9444444444444444,
+      "ci": [
+        0.7424220019799247,
+        0.9901250641690756
+      ],
+      "lenient": 0.9444444444444444,
+      "value_n": 11,
+      "value_accuracy": 0.9090909090909091,
+      "counts": {
+        "null_match": 7,
+        "wrong": 1,
+        "correct": 10
+      }
+    },
+    "discount": {
+      "matcher": "money",
+      "n": 18,
+      "accuracy": 0.9444444444444444,
+      "ci": [
+        0.7424220019799247,
+        0.9901250641690756
+      ],
+      "lenient": 0.9444444444444444,
+      "value_n": 2,
+      "value_accuracy": 1.0,
+      "counts": {
+        "correct": 2,
+        "null_match": 15,
+        "spurious": 1
+      }
+    },
+    "subtotal": {
+      "matcher": "money",
+      "n": 18,
+      "accuracy": 0.8888888888888888,
+      "ci": [
+        0.6719975513339578,
+        0.9689811315464172
+      ],
+      "lenient": 0.8888888888888888,
+      "value_n": 12,
+      "value_accuracy": 0.9166666666666666,
+      "counts": {
+        "correct": 11,
+        "null_match": 5,
+        "wrong": 1,
+        "spurious": 1
+      }
+    },
+    "card_paid": {
+      "matcher": "money",
+      "n": 18,
+      "accuracy": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "lenient": 1.0,
+      "value_n": 3,
+      "value_accuracy": 1.0,
+      "counts": {
+        "correct": 3,
+        "null_match": 15
+      }
+    },
+    "cash_paid": {
+      "matcher": "money",
+      "n": 18,
+      "accuracy": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "lenient": 1.0,
+      "value_n": 14,
+      "value_accuracy": 1.0,
+      "counts": {
+        "null_match": 4,
+        "correct": 14
+      }
+    },
+    "item_count": {
+      "matcher": "integer",
+      "n": 18,
+      "accuracy": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "lenient": 1.0,
+      "value_n": 4,
+      "value_accuracy": 1.0,
+      "counts": {
+        "correct": 4,
+        "null_match": 14
+      }
+    },
+    "line_items[].name": {
+      "matcher": "text",
+      "n": 38,
+      "accuracy": 0.8157894736842105,
+      "ci": [
+        0.6658083165848865,
+        0.907783515467425
+      ],
+      "lenient": 0.868421052631579,
+      "value_n": 34,
+      "value_accuracy": 0.9117647058823529,
+      "counts": {
+        "correct": 31,
+        "fuzzy": 2,
+        "spurious": 4,
+        "wrong": 1
+      }
+    },
+    "line_items[].quantity": {
+      "matcher": "integer",
+      "n": 38,
+      "accuracy": 0.8947368421052632,
+      "ci": [
+        0.7586916879980553,
+        0.9582981020673341
+      ],
+      "lenient": 0.8947368421052632,
+      "value_n": 34,
+      "value_accuracy": 1.0,
+      "counts": {
+        "correct": 34,
+        "spurious": 4
+      }
+    },
+    "line_items[].line_total": {
+      "matcher": "money",
+      "n": 38,
+      "accuracy": 0.8421052631578947,
+      "ci": [
+        0.6958287736272311,
+        0.9255623777627731
+      ],
+      "lenient": 0.8421052631578947,
+      "value_n": 34,
+      "value_accuracy": 0.9411764705882353,
+      "counts": {
+        "correct": 32,
+        "spurious": 4,
+        "wrong": 2
+      }
+    },
+    "line_items[].unit_price": {
+      "matcher": "money",
+      "n": 38,
+      "accuracy": 0.8421052631578947,
+      "ci": [
+        0.6958287736272311,
+        0.9255623777627731
+      ],
+      "lenient": 0.8421052631578947,
+      "value_n": 8,
+      "value_accuracy": 0.875,
+      "counts": {
+        "spurious": 5,
+        "null_match": 25,
+        "correct": 7,
+        "wrong": 1
+      }
+    },
+    "service_charge": {
+      "matcher": "money",
+      "n": 18,
+      "accuracy": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "lenient": 1.0,
+      "value_n": 1,
+      "value_accuracy": 1.0,
+      "counts": {
+        "null_match": 17,
+        "correct": 1
+      }
+    }
+  },
+  "lists": {
+    "line_items": {
+      "docs": 18,
+      "exact_rate": 0.6666666666666666,
+      "ci": [
+        0.4374906934425036,
+        0.8372144563633714
+      ],
+      "item_precision": 0.7631578947368421,
+      "item_recall": 0.8529411764705882,
+      "golden_items": 34,
+      "predicted_items": 38
+    }
+  },
+  "errors": [
+    {
+      "document": "cord-v2/test/0002",
+      "status": "failed",
+      "error": "rate_limit: Error code: 429 - {'error': {'message': 'Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day', 'code': 429, 'metadata': {'headers': {'X-RateLimit-Limit': '50', 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': '1789776000000'}, 'limit_source': 'openrouter_free_tier_daily', 'remedy_hint': 'Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.', 'provider_name': None}}, 'user_id': 'user_3JVEOj9bxnAR9NDSFOC5SWUvdbF'}"
+    },
+    {
+      "document": "cord-v2/test/0017",
+      "status": "failed",
+      "error": "rate_limit: Error code: 429 - {'error': {'message': 'Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day', 'code': 429, 'metadata': {'headers': {'X-RateLimit-Limit': '50', 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': '1789776000000'}, 'limit_source': 'openrouter_free_tier_daily', 'remedy_hint': 'Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.', 'provider_name': None}}, 'user_id': 'user_3JVEOj9bxnAR9NDSFOC5SWUvdbF'}"
+    }
+  ],
+  "created_at": "2026-09-18T14:25:17.068364+00:00",
+  "notes": "v2: OCR text + normalisation rules"
+}

@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "0411c4d9beb9be65165fdb70c2b60f8bbf9035cc9661be2b8d4c73bbfcff7972",
+    "fewshot": "",
+    "ocr_text": "True",
+    "prompt": "v2",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 21649,
+    "request_id": "gen-1789741101-Rq43cQ9TXDx44Wd1LLI7",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": null,\n  \"cash_paid\": 50000,\n  \"change\": 14000,\n  \"discount\": null,\n  \"item_count\": null,\n  \"line_items\": [\n    {\n      \"line_total\": 36000,\n      \"name\": \"Bumbu Kaldu Ayam\",\n      \"quantity\": 1,\n      \"unit_price\": 36000\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": 36000,\n  \"tax\": null,\n  \"total\": null\n}",
+    "usage": {
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "input_tokens": 1880,
+      "output_tokens": 737
+    }
+  }
+}

@@ -16,7 +16,7 @@ from fieldwise.config import get_settings
 from fieldwise.db import migrate
 from fieldwise.db.engine import get_engine, session_factory
 from fieldwise.db.models import Document, EvalRun
-from fieldwise.documents.cord_import import import_split
+from fieldwise.documents.cord_import import import_split, remap_labels
 from fieldwise.documents.ocr import RapidOcrProvider
 from fieldwise.documents.ocr_service import ocr_document, pending_documents
 from fieldwise.evals.report import print_summary, render_comparison, write_report
@@ -110,6 +110,18 @@ def ingest_cord(
             )
             for error in stats.errors[:10]:
                 console.print(f"  [red]{error}[/red]")
+
+
+@ingest_app.command("remap")
+def ingest_remap(schema: Annotated[str, typer.Option(help="Schema name.")] = "receipt") -> None:
+    """Re-map stored dataset annotations after a parser or mapper change."""
+    with session_factory()() as session:
+        schema_row = get_schema(session, schema)
+        if schema_row is None:
+            raise typer.BadParameter(f"schema {schema!r} is not in the database")
+        changed = remap_labels(session, schema_row)
+        session.commit()
+        console.print(f"re-mapped labels: {changed} changed")
 
 
 @ocr_app.command("run")

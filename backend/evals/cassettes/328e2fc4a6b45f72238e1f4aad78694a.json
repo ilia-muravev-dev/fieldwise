@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "810d3545f4105b19757c4b8b35934a477cde8cd1875302d9092315d2f960ef93",
+    "fewshot": "",
+    "ocr_text": "True",
+    "prompt": "v2",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 20986,
+    "request_id": "gen-1789740999-ALHpsdn2nKYVcRUvo9sz",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": null,\n  \"cash_paid\": 111000,\n  \"change\": null,\n  \"discount\": null,\n  \"item_count\": null,\n  \"line_items\": [\n    {\n      \"line_total\": 100000,\n      \"name\": \"Kupon 15\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 909,\n      \"name\": \"ADD CHICKEN BOX\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": 100909,\n  \"tax\": 10091,\n  \"total\": 111000\n}",
+    "usage": {
+      "cache_read_tokens": 1280,
+      "cache_write_tokens": 0,
+      "input_tokens": 619,
+      "output_tokens": 872
+    }
+  }
+}
