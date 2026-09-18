@@ -54,3 +54,10 @@ def test_off_mode_is_a_passthrough(tmp_path: Path) -> None:
     provider.complete(request())
     assert len(inner.requests) == 2
     assert not list(tmp_path.glob("*.json"))
+
+
+def test_truncated_responses_are_not_recorded(tmp_path: Path) -> None:
+    inner = FakeProvider(lambda req: {"n": 1}, stop_reason="max_tokens")
+    recorder = CassetteProvider(inner, tmp_path, "record")
+    assert recorder.complete(request()).truncated
+    assert not list(tmp_path.glob("*.json"))

@@ -128,3 +128,68 @@ class ExtractionRun(Base):
 
     document: Mapped[Document] = relationship()
     schema: Mapped[Schema] = relationship()
+
+
+class EvalRun(Base):
+    """A measurement: one configuration over a labelled split, with the aggregate numbers."""
+
+    __tablename__ = "eval_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    schema_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("schemas.id", ondelete="CASCADE"))
+    prompt_version: Mapped[str] = mapped_column(String(16))
+    model: Mapped[str] = mapped_column(String(64))
+    effort: Mapped[str] = mapped_column(String(8))
+    fewshot_k: Mapped[int] = mapped_column(Integer, default=0)
+    use_ocr_text: Mapped[bool] = mapped_column(default=True)
+    provider: Mapped[str] = mapped_column(String(16))
+    split: Mapped[str] = mapped_column(String(16))
+    mode: Mapped[str] = mapped_column(String(8), default="sync")  # sync | batch
+    notes: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(16), default="running")  # running | done | failed
+    doc_count: Mapped[int] = mapped_column(Integer, default=0)
+    reps: Mapped[int] = mapped_column(Integer, default=1)
+    succeeded: Mapped[int] = mapped_column(Integer, default=0)
+    truncated: Mapped[int] = mapped_column(Integer, default=0)
+    failed: Mapped[int] = mapped_column(Integer, default=0)
+    per_field: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    lists: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    overall_accuracy: Mapped[float | None] = mapped_column()
+    lenient_accuracy: Mapped[float | None] = mapped_column()
+    value_accuracy: Mapped[float | None] = mapped_column()
+    doc_exact_rate: Mapped[float | None] = mapped_column()
+    cost_usd: Mapped[float | None] = mapped_column()
+    cost_per_doc: Mapped[float | None] = mapped_column()
+    p50_ms: Mapped[int | None] = mapped_column(Integer)
+    p95_ms: Mapped[int | None] = mapped_column(Integer)
+    errors: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=func.now()
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    schema: Mapped[Schema] = relationship()
+    results: Mapped[list["EvalResult"]] = relationship(
+        back_populates="eval_run", cascade="all, delete-orphan"
+    )
+
+
+class EvalResult(Base):
+    """The graded outcome of one extraction inside an eval run."""
+
+    __tablename__ = "eval_results"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    eval_run_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("eval_runs.id", ondelete="CASCADE"), index=True
+    )
+    document_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"))
+    extraction_run_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("extraction_runs.id", ondelete="CASCADE")
+    )
+    rep: Mapped[int] = mapped_column(Integer, default=1)
+    outcomes: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+
+    eval_run: Mapped[EvalRun] = relationship(back_populates="results")
+    document: Mapped[Document] = relationship()
+    extraction_run: Mapped[ExtractionRun] = relationship()

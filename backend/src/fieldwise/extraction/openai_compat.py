@@ -2,9 +2,9 @@
 open-weight vision models), a local Ollama, or OpenAI itself. It exists so the pipeline can be
 tried for free and so the results table can put a local model next to Claude.
 
-What does not carry over from the Anthropic provider: the effort setting (ignored), prompt
-caching (server dependent), and the cost table (OpenRouter reports the cost itself; Ollama is
-free; anything else is priced as unknown)."""
+What does not carry over from the Anthropic provider: prompt caching (server dependent) and the
+cost table (OpenRouter reports the cost itself; Ollama is free; anything else is priced as
+unknown). The effort setting becomes OpenRouter's `reasoning.effort` and is ignored elsewhere."""
 
 from __future__ import annotations
 
@@ -20,6 +20,13 @@ from fieldwise.extraction.provider import LLMError, LLMRequest, LLMResponse, LLM
 
 OPENROUTER_HOST = "openrouter.ai"
 FINISH_REASONS = {"stop": "end_turn", "length": "max_tokens"}
+REASONING_EFFORT = {
+    "low": "low",
+    "medium": "medium",
+    "high": "high",
+    "xhigh": "high",
+    "max": "high",
+}
 
 
 def provider_name_for(base_url: str) -> str:
@@ -91,6 +98,8 @@ class OpenAICompatibleProvider:
         extra_body: dict[str, Any] = {}
         if self.name == "openrouter":
             extra_body["usage"] = {"include": True}
+            # Reasoning models spend output tokens on thinking; keep it proportional to effort.
+            extra_body["reasoning"] = {"effort": REASONING_EFFORT.get(request.effort, "high")}
         return self.client.chat.completions.create(
             model=request.model,
             messages=messages,

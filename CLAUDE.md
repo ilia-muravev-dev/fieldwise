@@ -5,7 +5,8 @@ and `web/` (Next.js). Postgres with pgvector and Redis run from `docker-compose.
 
 ## Commands
 - `just up` — Postgres + Redis; `just check` — everything CI runs; `just backend-fix` — ruff fixes + format
-- `cd backend && uv run fieldwise --help` — the CLI (ingest, extract, eval, report)
+- `cd backend && uv run fieldwise --help` — the CLI: `db`, `schemas`, `ingest`, `ocr`, `extract`, `eval`
+- `uv run fieldwise eval run --prompt v1 --limit 20 --cassette record` — measure; `eval compare a b` — the README table
 - Tests: `uv run pytest` (unit) — integration tests need Docker and are marked `integration`
 
 ## Rules of the codebase

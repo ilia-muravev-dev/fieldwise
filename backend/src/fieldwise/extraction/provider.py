@@ -104,6 +104,16 @@ class LLMProvider(Protocol):
     def complete(self, request: LLMRequest) -> LLMResponse: ...
 
 
+class BatchCapable(Protocol):
+    """Providers that can process many requests asynchronously (Anthropic's Batches API)."""
+
+    def complete_batch(
+        self, requests: list[LLMRequest], *, on_status: Callable[[str, int], None] | None = None
+    ) -> list[LLMResponse | LLMError]: ...
+
+    def estimate_input_tokens(self, request: LLMRequest) -> int | None: ...
+
+
 class AnthropicProvider:
     name = "anthropic"
 
@@ -151,6 +161,9 @@ class AnthropicProvider:
                 f"asked for {request.model}, served by {message.model}",
                 retryable=False,
             )
+        return self._to_response(message, latency_ms=latency_ms, request_id=message._request_id)
+
+    def _to_response(self, message: Any, *, latency_ms: int, request_id: str | None) -> LLMResponse:
         text = "".join(block.text for block in message.content if block.type == "text")
         usage = LLMUsage(
             input_tokens=message.usage.input_tokens,
@@ -164,8 +177,76 @@ class AnthropicProvider:
             served_model=message.model,
             stop_reason=message.stop_reason,
             latency_ms=latency_ms,
-            request_id=message._request_id,
+            request_id=request_id,
         )
+
+    def estimate_input_tokens(self, request: LLMRequest) -> int | None:
+        counted = self.client.messages.count_tokens(
+            model=request.model, system=request.system_blocks(), messages=request.messages()
+        )
+        return counted.input_tokens
+
+    def complete_batch(
+        self,
+        requests: list[LLMRequest],
+        *,
+        on_status: Callable[[str, int], None] | None = None,
+        poll_seconds: float = 20.0,
+    ) -> list[LLMResponse | LLMError]:
+        """Submits one Message Batch (50% price), polls until it ends, maps results by custom_id."""
+        from anthropic.types.message_create_params import (  # noqa: PLC0415
+            MessageCreateParamsNonStreaming,
+        )
+        from anthropic.types.messages.batch_create_params import Request  # noqa: PLC0415
+
+        batch = self.client.messages.batches.create(
+            requests=[
+                Request(
+                    custom_id=f"r{index}",
+                    params=MessageCreateParamsNonStreaming(
+                        model=request.model,
+                        max_tokens=request.max_tokens,
+                        system=request.system_blocks(),
+                        messages=request.messages(),
+                        output_config={
+                            "effort": cast(Any, request.effort),
+                            "format": {"type": "json_schema", "schema": request.output_schema},
+                        },
+                    ),
+                )
+                for index, request in enumerate(requests)
+            ]
+        )
+        while True:
+            status = self.client.messages.batches.retrieve(batch.id)
+            if on_status:
+                on_status(status.processing_status, status.request_counts.processing)
+            if status.processing_status == "ended":
+                break
+            time.sleep(poll_seconds)
+        outcomes: dict[str, LLMResponse | LLMError] = {}
+        for item in self.client.messages.batches.results(batch.id):
+            result = item.result
+            if result.type == "succeeded":
+                outcomes[item.custom_id] = self._to_response(
+                    result.message, latency_ms=0, request_id=batch.id
+                )
+            elif result.type == "errored":
+                error_type = getattr(result.error.error, "type", "api_error")
+                kind = "bad_request" if error_type == "invalid_request_error" else "server"
+                outcomes[item.custom_id] = LLMError(
+                    kind, str(result.error), retryable=kind == "server"
+                )
+            else:
+                outcomes[item.custom_id] = LLMError(
+                    result.type, f"batch item {result.type}", retryable=True
+                )
+        return [
+            outcomes.get(
+                f"r{index}", LLMError("server", "missing from batch results", retryable=True)
+            )
+            for index in range(len(requests))
+        ]
 
 
 Responder = Callable[[LLMRequest], dict[str, Any] | str]
@@ -204,3 +285,19 @@ class FakeProvider:
             stop_reason=self.stop_reason,
             latency_ms=self.latency_ms,
         )
+
+    def estimate_input_tokens(self, request: LLMRequest) -> int | None:
+        return None
+
+    def complete_batch(
+        self, requests: list[LLMRequest], *, on_status: Callable[[str, int], None] | None = None
+    ) -> list[LLMResponse | LLMError]:
+        outcomes: list[LLMResponse | LLMError] = []
+        for request in requests:
+            try:
+                outcomes.append(self.complete(request))
+            except LLMError as error:
+                outcomes.append(error)
+        if on_status:
+            on_status("ended", 0)
+        return outcomes

@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "ca4bf89562b3f55c2c91968ca221a629e48386744a5322596d9c7345648ada13",
+    "fewshot": "",
+    "ocr_text": "False",
+    "prompt": "v1",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 23342,
+    "request_id": "gen-1789739349-PVCCFh1SJEnPLVbPXVDQ",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": null,\n  \"cash_paid\": 52.000,\n  \"change\": 700,\n  \"discount\": null,\n  \"item_count\": null,\n  \"line_items\": [\n    {\n      \"line_total\": 43.636,\n      \"name\": \"BASE KUAH\",\n      \"quantity\": 1,\n      \"unit_price\": 43.636\n    },\n    {\n      \"line_total\": 3.000,\n      \"name\": \"A.MINERAL GELAS\",\n      \"quantity\": 1,\n      \"unit_price\": 3.000\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": 46.636,\n  \"tax\": 4.664,\n  \"total\": 51.300\n}",
+    "usage": {
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "input_tokens": 2099,
+      "output_tokens": 891
+    }
+  }
+}
