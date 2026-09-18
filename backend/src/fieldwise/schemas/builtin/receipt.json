@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "receipt",
+  "description": "A retail or restaurant receipt. Amounts are plain numbers in the receipt's currency, without thousands separators or currency symbols. Use null for anything that is not printed.",
+  "type": "object",
+  "properties": {
+    "line_items": {
+      "type": "array",
+      "description": "Purchased items in the order they are printed. One entry per printed line item; sub-items (toppings, modifiers) belong to their parent item and are not separate entries.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Item name as printed, without the quantity, unit price or line total."
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Number of units on the line. 1 when no quantity is printed.",
+            "x-fieldwise": { "matcher": "integer" }
+          },
+          "unit_price": {
+            "type": "number",
+            "description": "Price of one unit, only when it is printed separately from the line total.",
+            "x-fieldwise": { "matcher": "money" }
+          },
+          "line_total": {
+            "type": "number",
+            "description": "Total printed for the line (quantity × unit price).",
+            "x-fieldwise": { "matcher": "money" }
+          }
+        }
+      }
+    },
+    "subtotal": {
+      "type": "number",
+      "description": "Sum of the line items before discounts, service charge and tax, when printed.",
+      "x-fieldwise": { "matcher": "money" }
+    },
+    "discount": {
+      "type": "number",
+      "description": "Total discount applied to the receipt, with the sign as printed (usually negative).",
+      "x-fieldwise": { "matcher": "money" }
+    },
+    "service_charge": {
+      "type": "number",
+      "description": "Service charge or gratuity line, when printed.",
+      "x-fieldwise": { "matcher": "money" }
+    },
+    "tax": {
+      "type": "number",
+      "description": "Tax amount (VAT, PB1, PPN, ...), when printed as an amount.",
+      "x-fieldwise": { "matcher": "money" }
+    },
+    "total": {
+      "type": "number",
+      "description": "The final amount to pay.",
+      "x-fieldwise": { "matcher": "money" }
+    },
+    "cash_paid": {
+      "type": "number",
+      "description": "Cash tendered by the customer, when printed.",
+      "x-fieldwise": { "matcher": "money" }
+    },
+    "change": {
+      "type": "number",
+      "description": "Change returned to the customer, when printed.",
+      "x-fieldwise": { "matcher": "money" }
+    },
+    "card_paid": {
+      "type": "number",
+      "description": "Amount paid by credit or debit card, when printed.",
+      "x-fieldwise": { "matcher": "money" }
+    },
+    "item_count": {
+      "type": "integer",
+      "description": "Total number of items printed as a count (e.g. 'Total Qty 3'), when printed.",
+      "x-fieldwise": { "matcher": "integer" }
+    }
+  }
+}
