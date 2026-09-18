@@ -27,6 +27,7 @@ from fieldwise.extraction.pipeline import (
     ExtractionOptions,
     PreparedExtraction,
     finish_extraction,
+    pending_repair,
     prepare_extraction,
 )
 from fieldwise.extraction.prompts.registry import get_prompt
@@ -230,7 +231,13 @@ def run_eval(
     outcomes = _execute(provider, requests, config, progress=progress, on_status=on_batch_status)
 
     _grade_and_summarise(
-        session, eval_run, compiled=compiled, prepared=prepared, outcomes=outcomes, config=config
+        session,
+        eval_run,
+        compiled=compiled,
+        prepared=prepared,
+        outcomes=outcomes,
+        config=config,
+        provider=provider,
     )
     session.flush()
     return eval_run
@@ -244,14 +251,28 @@ def _grade_and_summarise(
     prepared: list[tuple[PreparedExtraction, dict[str, Any], int]],
     outcomes: list[LLMResponse | LLMError],
     config: EvalConfig,
+    provider: LLMProvider,
 ) -> None:
     graded: list[DocumentOutcome] = []
     latencies: list[float] = []
     costs: list[float] = []
     counts = Counter[str]()
     errors: list[dict[str, Any]] = []
-    for (item, golden, rep), outcome in zip(prepared, outcomes, strict=True):
-        run = finish_extraction(item, outcome, batch_pricing=config.mode == "batch")
+    for (item, _golden, _rep), outcome in zip(prepared, outcomes, strict=True):
+        finish_extraction(item, outcome, batch_pricing=config.mode == "batch")
+    repairs = [
+        (index, request)
+        for index, (item, _, _) in enumerate(prepared)
+        if (request := pending_repair(item))
+    ]
+    if repairs:
+        repaired = _execute(
+            provider, [r for _, r in repairs], config, progress=None, on_status=None
+        )
+        for (index, _), outcome in zip(repairs, repaired, strict=True):
+            finish_extraction(prepared[index][0], outcome, batch_pricing=config.mode == "batch")
+    for item, golden, rep in prepared:
+        run = item.run
         counts[run.status] += 1
         result = EvalResult(
             eval_run_id=eval_run.id,

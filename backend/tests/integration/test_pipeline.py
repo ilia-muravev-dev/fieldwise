@@ -16,6 +16,17 @@ from fieldwise.storage import LocalStorage
 
 pytestmark = pytest.mark.integration
 
+EVIDENCE_KEYS = [
+    "subtotal",
+    "discount",
+    "service_charge",
+    "tax",
+    "total",
+    "cash_paid",
+    "change",
+    "card_paid",
+    "item_count",
+]
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "cord"
 STEM = "cord-v2_validation_0000"
 
@@ -126,3 +137,68 @@ def test_truncation_and_provider_errors_are_recorded_not_scored(
     assert failed.status == "failed"
     assert failed.error == "rate_limit: 429"
     assert failed.input_tokens is None
+
+
+def test_repair_round_fixes_an_inconsistent_answer(
+    session: Session, storage: LocalStorage, receipt: tuple[object, object, dict[str, object]]
+) -> None:
+    document, schema, golden = receipt
+    wrong = json.loads(json.dumps(golden))
+    wrong["total"] = 55500.0  # items add up to 45500
+    answers = iter(
+        [
+            {"fields": wrong, "evidence": {k: "" for k in EVIDENCE_KEYS}},
+            {
+                "fields": golden,
+                "evidence": {**{k: "" for k in EVIDENCE_KEYS}, "total": "TOTAL 45,500"},
+            },
+        ]
+    )
+    provider = FakeProvider(lambda req: next(answers))
+
+    run = run_extraction(
+        session,
+        storage,
+        document,  # type: ignore[arg-type]
+        schema=schema,  # type: ignore[arg-type]
+        options=ExtractionOptions(prompt="v4", fewshot_k=0),
+        provider=provider,
+    )
+
+    assert run.status == "succeeded"
+    assert run.repair_rounds == 1
+    assert run.result == golden
+    assert run.evidence == {"total": "TOTAL 45,500"}
+    assert len(provider.requests) == 2
+    repair = provider.requests[1]
+    assert repair.cache_key["round"] == "repair"
+    assert repair.follow_up[0]["role"] == "assistant"
+    assert "add up to 45500" in repair.follow_up[1]["content"]
+
+
+def test_failed_repair_keeps_the_first_answer(
+    session: Session, storage: LocalStorage, receipt: tuple[object, object, dict[str, object]]
+) -> None:
+    document, schema, golden = receipt
+    wrong = json.loads(json.dumps(golden))
+    wrong["total"] = 55500.0
+    calls = {"n": 0}
+
+    def responder(request: LLMRequest) -> dict[str, object]:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return {"fields": wrong, "evidence": {k: "" for k in EVIDENCE_KEYS}}
+        raise LLMError("rate_limit", "429", retryable=True)
+
+    run = run_extraction(
+        session,
+        storage,
+        document,  # type: ignore[arg-type]
+        schema=schema,  # type: ignore[arg-type]
+        options=ExtractionOptions(prompt="v4", fewshot_k=0),
+        provider=FakeProvider(responder),
+    )
+    assert run.status == "succeeded"
+    assert run.result == wrong
+    assert run.repair_rounds == 0
+    assert run.error == "repair skipped: rate_limit: 429"

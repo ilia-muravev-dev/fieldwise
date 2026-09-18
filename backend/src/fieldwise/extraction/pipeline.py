@@ -4,7 +4,8 @@ in a thread pool or hand a whole set of requests to the Batches API. `run_extrac
 straight-through version."""
 
 import json
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
+from decimal import Decimal
 from typing import Any
 
 import jsonschema
@@ -16,10 +17,11 @@ from fieldwise.documents.ocr import OcrSpan, deserialise_spans
 from fieldwise.extraction.builder import FewShotExample, build_request
 from fieldwise.extraction.confidence import score_fields
 from fieldwise.extraction.pricing import cost_usd
-from fieldwise.extraction.prompts.registry import get_prompt
+from fieldwise.extraction.prompts.registry import PromptSpec, get_prompt
 from fieldwise.extraction.provider import LLMError, LLMProvider, LLMRequest, LLMResponse
 from fieldwise.schemas.compiler import CompiledSchema, compile_schema
 from fieldwise.storage import Storage
+from fieldwise.values import parse_money
 
 log = structlog.get_logger(__name__)
 
@@ -35,25 +37,27 @@ class ExtractionOptions:
     batch_pricing: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass
 class PreparedExtraction:
     run: ExtractionRun
     request: LLMRequest
     document: Document
     compiled: CompiledSchema
     spans: list[OcrSpan]
+    spec: PromptSpec
+    rounds: list[dict[str, Any]] = field(default_factory=list)  # per round: text + data
 
 
 class InvalidOutputError(ValueError):
     pass
 
 
-def parse_output(text: str, strict_schema: dict[str, Any]) -> dict[str, Any]:
+def parse_output(text: str, output_schema: dict[str, Any]) -> dict[str, Any]:
     try:
         data = json.loads(text)
     except json.JSONDecodeError as error:
         raise InvalidOutputError(f"not JSON: {error.msg} at {error.pos}") from error
-    validator = jsonschema.Draft202012Validator(strict_schema)
+    validator = jsonschema.Draft202012Validator(output_schema)
     errors = sorted(validator.iter_errors(data), key=lambda e: list(e.path))
     if errors:
         first = errors[0]
@@ -62,6 +66,56 @@ def parse_output(text: str, strict_schema: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise InvalidOutputError("the output is not an object")
     return data
+
+
+def split_evidence(data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """{"fields": ..., "evidence": ...} → (fields, evidence); plain results pass through."""
+    if set(data) == {"fields", "evidence"} and isinstance(data["fields"], dict):
+        evidence = {k: v for k, v in dict(data["evidence"]).items() if v not in (None, "")}
+        return data["fields"], evidence
+    return data, None
+
+
+def inconsistency(result: dict[str, Any]) -> str | None:
+    """Explains why the amounts do not add up, or None. Line totals must reach the subtotal, or
+    the total when nothing sits between them; tolerance 1% (and at least one unit)."""
+    items = result.get("line_items")
+    if not isinstance(items, list) or not items:
+        return None
+    totals = [parse_money(item.get("line_total")) for item in items if isinstance(item, dict)]
+    if any(t is None for t in totals):
+        return None  # some line totals are not printed: nothing to reconcile
+    items_sum = sum((t for t in totals if t is not None), Decimal(0))
+    subtotal = parse_money(result.get("subtotal"))
+    adjustments = [result.get(k) for k in ("discount", "service_charge", "tax")]
+    target, name = (subtotal, "subtotal")
+    if target is None and all(a in (None, "") for a in adjustments):
+        target, name = (parse_money(result.get("total")), "total")
+    if target is None:
+        return None
+    tolerance = max(abs(target) * Decimal("0.01"), Decimal(1))
+    if abs(items_sum - target) <= tolerance:
+        return None
+    return f"the line totals add up to {items_sum} but the {name} is {target}"
+
+
+def repair_request(prepared: PreparedExtraction, previous_text: str, reason: str) -> LLMRequest:
+    """One more turn: the model sees its own answer and what does not add up."""
+    follow_up = [
+        {"role": "assistant", "content": previous_text},
+        {
+            "role": "user",
+            "content": (
+                f"Check again: {reason}. Re-read the receipt and return the corrected JSON object "
+                "only — fix the line items or the amounts, whichever the receipt actually shows."
+            ),
+        },
+    ]
+    return replace(
+        prepared.request,
+        follow_up=follow_up,
+        cache_key={**prepared.request.cache_key, "round": "repair"},
+    )
 
 
 def document_spans(document: Document) -> list[OcrSpan]:
@@ -121,6 +175,7 @@ def prepare_extraction(
         document=document,
         compiled=compiled,
         spans=document_spans(document),
+        spec=spec,
     )
 
 
@@ -130,30 +185,59 @@ def finish_extraction(
     *,
     batch_pricing: bool = False,
 ) -> ExtractionRun:
+    """Grades one response into the run. Call it again with the repair round's response: usage
+    adds up, and the later answer replaces the earlier one only when it parses."""
     run = prepared.run
     if isinstance(outcome, LLMError):
-        run.status = "failed"
-        run.error = str(outcome)
-        log.warning("extraction.failed", document=prepared.document.name, error=str(outcome))
-        return run
+        return _fail(prepared, "failed", str(outcome))
     _record_usage(run, outcome, batch=batch_pricing)
     if outcome.truncated:
-        run.status = "truncated"
-        run.error = "stop_reason=max_tokens"
-        return run
+        return _fail(prepared, "truncated", "stop_reason=max_tokens")
     try:
-        data = parse_output(outcome.text, prepared.compiled.strict)
+        data = parse_output(outcome.text, prepared.request.output_schema)
     except InvalidOutputError as error:
-        run.status = "failed"
-        run.error = f"invalid_output: {error}"
-        log.warning("extraction.invalid_output", document=prepared.document.name, error=str(error))
-        return run
-    confidences, boxes = score_fields(data, prepared.spans)
-    run.result = data
+        return _fail(prepared, "failed", f"invalid_output: {error}")
+    is_repair = bool(prepared.rounds)
+    fields, evidence = split_evidence(data)
+    confidences, boxes = score_fields(fields, prepared.spans)
+    run.result = fields
+    run.evidence = evidence
     run.confidences = confidences
     run.boxes = {path: [list(b) for b in box_list] for path, box_list in boxes.items()}
     run.status = "succeeded"
+    if is_repair:
+        run.repair_rounds = len(prepared.rounds)
+        run.error = None
+    prepared.rounds.append({"text": outcome.text, "fields": fields})
     return run
+
+
+def _fail(prepared: PreparedExtraction, status: str, message: str) -> ExtractionRun:
+    """A failed round: the first one fails the run, a failed repair keeps the first answer."""
+    run = prepared.run
+    if prepared.rounds:
+        run.error = f"repair skipped: {message}"
+        return run
+    run.status = status
+    run.error = message
+    log.warning("extraction.failed", document=prepared.document.name, status=status, error=message)
+    return run
+
+
+def pending_repair(prepared: PreparedExtraction) -> LLMRequest | None:
+    """After a successful first round: the repair request when the spec asks for a check and
+    the amounts do not add up; None otherwise (or once a repair has already run)."""
+    run = prepared.run
+    if (
+        not prepared.spec.consistency_check
+        or run.status != "succeeded"
+        or len(prepared.rounds) != 1
+    ):
+        return None
+    reason = inconsistency(run.result or {})
+    if reason is None:
+        return None
+    return repair_request(prepared, prepared.rounds[0]["text"], reason)
 
 
 def run_extraction(
@@ -175,26 +259,36 @@ def run_extraction(
         provider_name=provider.name,
         examples=examples,
     )
-    outcome: LLMResponse | LLMError
-    try:
-        outcome = provider.complete(prepared.request)
-    except LLMError as error:
-        outcome = error
-    run = finish_extraction(prepared, outcome, batch_pricing=options.batch_pricing)
+    run = finish_extraction(
+        prepared, _call(provider, prepared.request), batch_pricing=options.batch_pricing
+    )
+    repair = pending_repair(prepared)
+    if repair is not None:
+        finish_extraction(prepared, _call(provider, repair), batch_pricing=options.batch_pricing)
     session.flush()
     return run
 
 
+def _call(provider: LLMProvider, request: LLMRequest) -> LLMResponse | LLMError:
+    try:
+        return provider.complete(request)
+    except LLMError as error:
+        return error
+
+
 def _record_usage(run: ExtractionRun, response: LLMResponse, *, batch: bool) -> None:
-    run.input_tokens = response.usage.input_tokens
-    run.cache_write_tokens = response.usage.cache_write_tokens
-    run.cache_read_tokens = response.usage.cache_read_tokens
-    run.output_tokens = response.usage.output_tokens
-    run.cost_usd = (
+    cost = (
         response.cost_usd
         if response.cost_usd is not None
         else cost_usd(run.model, response.usage, batch=batch)
     )
-    run.latency_ms = response.latency_ms
+    run.input_tokens = (run.input_tokens or 0) + response.usage.input_tokens
+    run.cache_write_tokens = (run.cache_write_tokens or 0) + response.usage.cache_write_tokens
+    run.cache_read_tokens = (run.cache_read_tokens or 0) + response.usage.cache_read_tokens
+    run.output_tokens = (run.output_tokens or 0) + response.usage.output_tokens
+    run.cost_usd = (
+        None if cost is None and run.cost_usd is None else (run.cost_usd or 0.0) + (cost or 0.0)
+    )
+    run.latency_ms = (run.latency_ms or 0) + response.latency_ms
     run.served_model = response.served_model
     run.request_id = response.request_id

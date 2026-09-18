@@ -36,9 +36,15 @@ class LLMRequest:
     # Stable identity of the request for the cassette provider: what it was built from, not the
     # bytes it contains (image encoding must not change the key).
     cache_key: dict[str, str] = field(default_factory=dict)
+    # Follow-up turns after the main user message (assistant answer, user repair instruction).
+    follow_up: list[dict[str, Any]] = field(default_factory=list)
 
     def messages(self) -> list[MessageParam]:
-        return [{"role": "user", "content": cast(list[ContentBlockParam], self.content)}]
+        first: MessageParam = {
+            "role": "user",
+            "content": cast(list[ContentBlockParam], self.content),
+        }
+        return [first, *cast(list[MessageParam], self.follow_up)]
 
     def system_blocks(self) -> list[TextBlockParam]:
         return [{"type": "text", "text": self.system, "cache_control": {"type": "ephemeral"}}]

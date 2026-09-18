@@ -64,7 +64,7 @@ def test_meta_endpoints(api: tuple[TestClient, Delayed, Delayed, Delayed]) -> No
     client = api[0]
     assert client.get("/health").json()["status"] == "ok"
     prompts = client.get("/prompts").json()
-    assert [p["name"] for p in prompts] == ["v1", "v2", "v3"]
+    assert [p["name"] for p in prompts] == ["v1", "v2", "v3", "v4"]
     assert prompts[2]["fewshot_k"] == 3
     assert any(m["id"] == "claude-sonnet-5" for m in client.get("/models").json())
 

@@ -14,6 +14,30 @@ from fieldwise.schemas.compiler import CompiledSchema
 MODEL_IMAGE_MAX_EDGE = 1568  # the largest edge the vision encoder uses without downscaling
 
 
+def with_evidence(compiled: CompiledSchema) -> dict[str, Any]:
+    """Wraps the strict schema: {"fields": <values>, "evidence": {<top-level scalar>: string}}."""
+    scalar_paths = [
+        f.path
+        for f in compiled.fields
+        if "." not in f.path and "[]" not in f.path and f.matcher not in ("list", "object")
+    ]
+    return {
+        "type": "object",
+        "properties": {
+            "fields": compiled.strict,
+            "evidence": {
+                "type": "object",
+                "description": "Printed text each top-level amount was read from; empty when null.",
+                "properties": {path: {"type": "string"} for path in scalar_paths},
+                "required": scalar_paths,
+                "additionalProperties": False,
+            },
+        },
+        "required": ["fields", "evidence"],
+        "additionalProperties": False,
+    }
+
+
 @dataclass(frozen=True)
 class FewShotExample:
     document_id: str
@@ -80,7 +104,7 @@ def build_request(
         model=model,
         system=spec.render_system(authored_schema),
         content=content,
-        output_schema=compiled.strict,
+        output_schema=with_evidence(compiled) if spec.use_evidence else compiled.strict,
         effort=effort,
         max_tokens=max_tokens,
         cache_key={

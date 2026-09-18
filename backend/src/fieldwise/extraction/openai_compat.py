@@ -88,13 +88,19 @@ class OpenAICompatibleProvider:
         return {"type": "json_object"}
 
     def _create(self, request: LLMRequest, mode: str) -> Any:
-        messages: list[ChatCompletionMessageParam] = cast(
-            list[ChatCompletionMessageParam],
-            [
-                {"role": "system", "content": request.system},
-                {"role": "user", "content": to_openai_content(request.content)},
-            ],
-        )
+        turns: list[dict[str, Any]] = [
+            {"role": "system", "content": request.system},
+            {"role": "user", "content": to_openai_content(request.content)},
+        ]
+        for turn in request.follow_up:
+            content = turn["content"]
+            turns.append(
+                {
+                    "role": turn["role"],
+                    "content": to_openai_content(content) if isinstance(content, list) else content,
+                }
+            )
+        messages = cast(list[ChatCompletionMessageParam], turns)
         extra_body: dict[str, Any] = {}
         if self.name == "openrouter":
             extra_body["usage"] = {"include": True}
