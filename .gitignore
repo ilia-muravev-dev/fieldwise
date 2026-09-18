@@ -1,0 +1,25 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+# node
+node_modules/
+.next/
+out/
+playwright-report/
+test-results/
+# data & secrets
+.env
+.env.*
+!.env.example
+data/
+backend/data/
+# editors / os
+.idea/
+.vscode/
+.DS_Store
