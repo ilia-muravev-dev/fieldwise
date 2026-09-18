@@ -23,16 +23,29 @@ backend-check:
 backend-fix:
     cd backend && uv run ruff check --fix . && uv run ruff format .
 
-# Regenerate the API contract the web client is built from
+# Regenerate the API contract and the typed web client built from it
 openapi:
     cd backend && uv run fieldwise openapi ../openapi.json
+    cd web && pnpm gen:api
 
 # Fail when openapi.json is stale (CI runs this)
 openapi-check:
     cd backend && uv run fieldwise openapi /tmp/fieldwise-openapi.json >/dev/null && diff -q /tmp/fieldwise-openapi.json ../openapi.json
 
+# Lint, types, tests and build for the web app
+web-check:
+    cd web && pnpm lint && pnpm typecheck && pnpm test && pnpm build
+
+# Regenerate the typed web client from openapi.json
+web-client:
+    cd web && pnpm gen:api
+
 # Everything CI runs
-check: backend-check openapi-check
+check: backend-check openapi-check web-check
+
+# Run the web app locally (proxies /api to :8000)
+web:
+    cd web && pnpm dev
 
 # Run the API locally with reload
 api:
