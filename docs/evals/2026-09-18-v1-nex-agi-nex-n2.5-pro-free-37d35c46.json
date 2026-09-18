@@ -1,0 +1,271 @@
+{
+  "id": "37d35c46-e332-46f8-b2ce-4ad893f3357f",
+  "prompt_version": "v1",
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "effort": "low",
+  "fewshot_k": 0,
+  "use_ocr_text": false,
+  "provider": "openrouter",
+  "split": "test",
+  "mode": "sync",
+  "doc_count": 20,
+  "reps": 1,
+  "succeeded": 19,
+  "truncated": 1,
+  "failed": 0,
+  "overall_accuracy": 0.8338028169014085,
+  "lenient_accuracy": 0.8450704225352113,
+  "value_accuracy": 0.8514851485148515,
+  "doc_exact_rate": 0.3157894736842105,
+  "cost_usd": 0.0,
+  "cost_per_doc": 0.0,
+  "p50_ms": 29585,
+  "p95_ms": 124146,
+  "per_field": {
+    "tax": {
+      "matcher": "money",
+      "n": 19,
+      "accuracy": 0.8421052631578947,
+      "ci": [
+        0.6243407235682331,
+        0.9447962896007217
+      ],
+      "lenient": 0.8421052631578947,
+      "value_n": 8,
+      "value_accuracy": 0.625,
+      "counts": {
+        "wrong": 3,
+        "null_match": 11,
+        "correct": 5
+      }
+    },
+    "total": {
+      "matcher": "money",
+      "n": 19,
+      "accuracy": 0.7368421052631579,
+      "ci": [
+        0.5120803155892935,
+        0.8819376166045982
+      ],
+      "lenient": 0.7368421052631579,
+      "value_n": 18,
+      "value_accuracy": 0.7222222222222222,
+      "counts": {
+        "wrong": 4,
+        "correct": 13,
+        "null_match": 1,
+        "missing": 1
+      }
+    },
+    "change": {
+      "matcher": "money",
+      "n": 19,
+      "accuracy": 1.0,
+      "ci": [
+        0.8318156346315496,
+        1.0
+      ],
+      "lenient": 1.0,
+      "value_n": 11,
+      "value_accuracy": 1.0,
+      "counts": {
+        "null_match": 8,
+        "correct": 11
+      }
+    },
+    "discount": {
+      "matcher": "money",
+      "n": 19,
+      "accuracy": 0.8947368421052632,
+      "ci": [
+        0.686054495051583,
+        0.9706420586049034
+      ],
+      "lenient": 0.8947368421052632,
+      "value_n": 3,
+      "value_accuracy": 0.6666666666666666,
+      "counts": {
+        "wrong": 1,
+        "null_match": 15,
+        "correct": 2,
+        "spurious": 1
+      }
+    },
+    "subtotal": {
+      "matcher": "money",
+      "n": 19,
+      "accuracy": 0.7894736842105263,
+      "ci": [
+        0.5666528575973392,
+        0.9149246150840843
+      ],
+      "lenient": 0.7894736842105263,
+      "value_n": 13,
+      "value_accuracy": 0.7692307692307693,
+      "counts": {
+        "wrong": 3,
+        "null_match": 5,
+        "correct": 10,
+        "spurious": 1
+      }
+    },
+    "card_paid": {
+      "matcher": "money",
+      "n": 19,
+      "accuracy": 0.9473684210526315,
+      "ci": [
+        0.7536078466345479,
+        0.99064824750947
+      ],
+      "lenient": 0.9473684210526315,
+      "value_n": 4,
+      "value_accuracy": 0.75,
+      "counts": {
+        "wrong": 1,
+        "null_match": 15,
+        "correct": 3
+      }
+    },
+    "cash_paid": {
+      "matcher": "money",
+      "n": 19,
+      "accuracy": 0.8421052631578947,
+      "ci": [
+        0.6243407235682331,
+        0.9447962896007217
+      ],
+      "lenient": 0.8421052631578947,
+      "value_n": 14,
+      "value_accuracy": 0.7857142857142857,
+      "counts": {
+        "null_match": 5,
+        "correct": 11,
+        "wrong": 3
+      }
+    },
+    "item_count": {
+      "matcher": "integer",
+      "n": 19,
+      "accuracy": 1.0,
+      "ci": [
+        0.8318156346315496,
+        1.0
+      ],
+      "lenient": 1.0,
+      "value_n": 4,
+      "value_accuracy": 1.0,
+      "counts": {
+        "correct": 4,
+        "null_match": 15
+      }
+    },
+    "line_items[].name": {
+      "matcher": "text",
+      "n": 46,
+      "accuracy": 0.7391304347826086,
+      "ci": [
+        0.5974057019172069,
+        0.8439926480555066
+      ],
+      "lenient": 0.8260869565217391,
+      "value_n": 40,
+      "value_accuracy": 0.85,
+      "counts": {
+        "correct": 34,
+        "fuzzy": 4,
+        "spurious": 6,
+        "wrong": 2
+      }
+    },
+    "line_items[].quantity": {
+      "matcher": "integer",
+      "n": 46,
+      "accuracy": 0.8695652173913043,
+      "ci": [
+        0.7433386576963865,
+        0.9388224286250797
+      ],
+      "lenient": 0.8695652173913043,
+      "value_n": 40,
+      "value_accuracy": 1.0,
+      "counts": {
+        "correct": 40,
+        "spurious": 6
+      }
+    },
+    "line_items[].line_total": {
+      "matcher": "money",
+      "n": 46,
+      "accuracy": 0.6956521739130435,
+      "ci": [
+        0.5519408125976183,
+        0.8092032919255109
+      ],
+      "lenient": 0.6956521739130435,
+      "value_n": 38,
+      "value_accuracy": 0.8421052631578947,
+      "counts": {
+        "wrong": 6,
+        "correct": 32,
+        "spurious": 8
+      }
+    },
+    "line_items[].unit_price": {
+      "matcher": "money",
+      "n": 46,
+      "accuracy": 0.8043478260869565,
+      "ci": [
+        0.668284622588308,
+        0.893495095558782
+      ],
+      "lenient": 0.8043478260869565,
+      "value_n": 8,
+      "value_accuracy": 0.75,
+      "counts": {
+        "spurious": 7,
+        "null_match": 31,
+        "correct": 6,
+        "wrong": 2
+      }
+    },
+    "service_charge": {
+      "matcher": "money",
+      "n": 19,
+      "accuracy": 1.0,
+      "ci": [
+        0.8318156346315496,
+        1.0
+      ],
+      "lenient": 1.0,
+      "value_n": 1,
+      "value_accuracy": 1.0,
+      "counts": {
+        "null_match": 18,
+        "correct": 1
+      }
+    }
+  },
+  "lists": {
+    "line_items": {
+      "docs": 19,
+      "exact_rate": 0.3684210526315789,
+      "ci": [
+        0.19149272376273843,
+        0.5896084250184328
+      ],
+      "item_precision": 0.6086956521739131,
+      "item_recall": 0.7,
+      "golden_items": 40,
+      "predicted_items": 46
+    }
+  },
+  "errors": [
+    {
+      "document": "cord-v2/test/0002",
+      "status": "truncated",
+      "error": "stop_reason=max_tokens"
+    }
+  ],
+  "created_at": "2026-09-18T13:58:19.022229+00:00",
+  "notes": "v1 baseline, free model, reasoning effort low"
+}

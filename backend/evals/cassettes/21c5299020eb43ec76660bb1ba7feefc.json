@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "eef326565b3945217a69afd84c893afdffd03a2f487943661c2423e6d6ec0d7d",
+    "fewshot": "",
+    "ocr_text": "False",
+    "prompt": "v1",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 58886,
+    "request_id": "gen-1789739573-m25boMBCfAtdlvsKn0Fv",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": null,\n  \"cash_paid\": 100000,\n  \"change\": 30000,\n  \"discount\": null,\n  \"item_count\": null,\n  \"line_items\": [\n    {\n      \"line_total\": 59091,\n      \"name\": \"[LG] BLACK SAKURA\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 0,\n      \"name\": \"LONGAN\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 0,\n      \"name\": \"ROASTED ALMOND\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 0,\n      \"name\": \"MANGGO\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 4545,\n      \"name\": \"MINERAL WATER (bundling) 5k\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": 63636,\n  \"tax\": 6364,\n  \"total\": 70000\n}",
+    "usage": {
+      "cache_read_tokens": 960,
+      "cache_write_tokens": 0,
+      "input_tokens": 1139,
+      "output_tokens": 1113
+    }
+  }
+}

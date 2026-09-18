@@ -99,7 +99,7 @@ def test_sends_json_schema_response_format_and_maps_usage() -> None:
     assert call["messages"][1]["role"] == "user"
     assert call["response_format"]["type"] == "json_schema"
     assert call["response_format"]["json_schema"]["schema"] == SCHEMA
-    assert call["extra_body"] == {"usage": {"include": True}}
+    assert call["extra_body"] == {"usage": {"include": True}, "reasoning": {"effort": "low"}}
     assert call["temperature"] == 0
     assert response.text == '{"total": 1}'
     assert (response.usage.input_tokens, response.usage.cache_read_tokens) == (100, 20)
