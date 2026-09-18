@@ -87,3 +87,44 @@ class GoldenLabel(Base):
 
     document: Mapped[Document] = relationship(back_populates="golden_labels")
     schema: Mapped[Schema] = relationship(back_populates="golden_labels")
+
+
+class ExtractionRun(Base):
+    """One model call over one document under one schema, with everything needed to audit it."""
+
+    __tablename__ = "extraction_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    schema_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("schemas.id", ondelete="CASCADE"))
+    prompt_version: Mapped[str] = mapped_column(String(16))
+    model: Mapped[str] = mapped_column(String(64))
+    effort: Mapped[str] = mapped_column(String(8))
+    fewshot_k: Mapped[int] = mapped_column(Integer, default=0)
+    use_ocr_text: Mapped[bool] = mapped_column(default=True)
+    provider: Mapped[str] = mapped_column(String(16))
+    # queued | running | succeeded | truncated | failed
+    status: Mapped[str] = mapped_column(String(16), default="queued")
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    confidences: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    evidence: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    boxes: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    fewshot_document_ids: Mapped[list[str] | None] = mapped_column(JSONB)
+    input_tokens: Mapped[int | None] = mapped_column(Integer)
+    cache_read_tokens: Mapped[int | None] = mapped_column(Integer)
+    cache_write_tokens: Mapped[int | None] = mapped_column(Integer)
+    output_tokens: Mapped[int | None] = mapped_column(Integer)
+    cost_usd: Mapped[float | None] = mapped_column()
+    latency_ms: Mapped[int | None] = mapped_column(Integer)
+    served_model: Mapped[str | None] = mapped_column(String(64))
+    request_id: Mapped[str | None] = mapped_column(String(64))
+    repair_rounds: Mapped[int] = mapped_column(Integer, default=0)
+    error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=func.now()
+    )
+
+    document: Mapped[Document] = relationship()
+    schema: Mapped[Schema] = relationship()
