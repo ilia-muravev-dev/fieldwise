@@ -25,6 +25,10 @@ dependencies = [
   "rapidocr>=3.9,<4",
   "onnxruntime>=1.22,<2",
   "opencv-python-headless>=4.10,<5",
+  "anthropic>=1.6,<2",
+  "rapidfuzz>=3.14,<4",
+  "jsonschema>=4.26,<5",
+  "openai>=2,<3",
 ]
 
 [project.scripts]
@@ -41,6 +45,7 @@ dev = [
   "moto[s3]>=5,<6",
   "boto3-stubs[s3]>=1.43,<2",
   "pyarrow-stubs>=20",
+  "types-jsonschema>=4.25",
 ]
 
 [tool.uv]

@@ -1,11 +1,13 @@
 """Command-line interface: database, schemas, ingestion, extraction, evals and reports."""
 
+import json
 from typing import Annotated
 
 import typer
 from rich.console import Console
 from rich.table import Table
 from sqlalchemy import or_, select
+from sqlalchemy.orm import Session
 
 from fieldwise import __version__
 from fieldwise.config import get_settings
@@ -15,8 +17,10 @@ from fieldwise.db.models import Document
 from fieldwise.documents.cord_import import import_split
 from fieldwise.documents.ocr import RapidOcrProvider
 from fieldwise.documents.ocr_service import ocr_document, pending_documents
+from fieldwise.extraction.factory import build_provider, describe
+from fieldwise.extraction.pipeline import ExtractionOptions, run_extraction
 from fieldwise.logging import configure_logging
-from fieldwise.schemas.registry import compile_builtin, sync_builtins
+from fieldwise.schemas.registry import compile_builtin, get_schema, sync_builtins
 from fieldwise.storage import get_storage
 
 app = typer.Typer(help="fieldwise — document extraction workbench.", no_args_is_help=True)
@@ -126,24 +130,78 @@ def ocr_run(
     console.print(f"[green]done {done}[/green] · [red]failed {failed}[/red]")
 
 
+def _find_document(session: Session, reference: str) -> Document:
+    row = session.scalars(
+        select(Document).where(or_(Document.external_id == reference, Document.name == reference))
+    ).first()
+    if row is None:
+        try:
+            row = session.get(Document, reference)
+        except Exception:  # not a UUID
+            row = None
+    if row is None:
+        raise typer.BadParameter(f"no document {reference!r}")
+    return row
+
+
 @ocr_app.command("show")
 def ocr_show(
     document: Annotated[str, typer.Argument(help="Document id, external id or name.")],
 ) -> None:
     """Print the OCR text of one document."""
     with session_factory()() as session:
-        row = session.scalars(
-            select(Document).where(or_(Document.external_id == document, Document.name == document))
-        ).first()
-        if row is None:
-            try:
-                row = session.get(Document, document)
-            except Exception:  # not a UUID
-                row = None
-        if row is None:
-            raise typer.BadParameter(f"no document {document!r}")
+        row = _find_document(session, document)
         console.print(f"[bold]{row.name}[/bold]  ocr_status={row.ocr_status}")
         console.print(row.ocr_text or "(no text)")
+
+
+@app.command()
+def extract(
+    document: Annotated[str, typer.Argument(help="Document id, external id or name.")],
+    *,
+    schema: Annotated[str, typer.Option(help="Schema name.")] = "receipt",
+    prompt: Annotated[str, typer.Option(help="Prompt version.")] = "v1",
+    model: Annotated[str | None, typer.Option(help="Model id (default from settings).")] = None,
+    effort: Annotated[str | None, typer.Option(help="low|medium|high|xhigh|max.")] = None,
+    provider: Annotated[str | None, typer.Option(help="anthropic | fake.")] = None,
+    cassette: Annotated[str | None, typer.Option(help="off | record | replay.")] = None,
+    ocr_text: Annotated[bool | None, typer.Option(help="Force OCR text on/off.")] = None,
+) -> None:
+    """Extract one document and print the result with tokens, cost and latency."""
+    settings = get_settings()
+    llm = build_provider(
+        settings,
+        provider_name=provider,
+        cassette_mode=cassette,  # type: ignore[arg-type]
+    )
+    options = ExtractionOptions(
+        prompt=prompt,
+        model=model or settings.default_model,
+        effort=effort or settings.default_effort,
+        use_ocr_text=ocr_text,
+    )
+    with session_factory()() as session:
+        row = _find_document(session, document)
+        schema_row = get_schema(session, schema)
+        if schema_row is None:
+            raise typer.BadParameter(f"schema {schema!r} is not in the database")
+        run = run_extraction(
+            session, get_storage(), row, schema=schema_row, options=options, provider=llm
+        )
+        session.commit()
+        console.print(
+            f"[bold]{row.name}[/bold] · {describe(llm)} · {run.model} · prompt {run.prompt_version}"
+            f" · effort {run.effort} · status [bold]{run.status}[/bold]"
+        )
+        if run.result is not None:
+            console.print_json(json.dumps(run.result))
+        if run.error:
+            console.print(f"[red]{run.error}[/red]")
+        console.print(
+            f"tokens in {run.input_tokens} (cache write {run.cache_write_tokens}, read "
+            f"{run.cache_read_tokens}) · out {run.output_tokens} · cost ${run.cost_usd} · "
+            f"{run.latency_ms} ms · served by {run.served_model} · run {run.id}"
+        )
 
 
 if __name__ == "__main__":

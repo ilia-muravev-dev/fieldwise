@@ -14,12 +14,16 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     storage_url: str = "file://./data/storage"
 
-    llm_provider: Literal["anthropic", "fake"] = "anthropic"
+    llm_provider: Literal["anthropic", "openai", "fake"] = "anthropic"
     llm_cassette_mode: Literal["off", "record", "replay"] = "off"
     llm_cassette_dir: str = "evals/cassettes"
     default_model: str = "claude-sonnet-5"
     default_effort: Literal["low", "medium", "high", "xhigh", "max"] = "low"
     anthropic_api_key: str | None = Field(default=None, repr=False)
+    # Any OpenAI-compatible endpoint: OpenRouter (https://openrouter.ai/api/v1),
+    # Ollama (http://localhost:11434/v1), OpenAI itself.
+    openai_base_url: str = "https://openrouter.ai/api/v1"
+    openai_api_key: str | None = Field(default=None, repr=False)
 
     log_level: str = "INFO"
 
