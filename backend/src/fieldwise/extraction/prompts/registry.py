@@ -45,6 +45,17 @@ PROMPTS: dict[str, PromptSpec] = {
         use_ocr_text=True,
         fewshot_k=3,
     ),
+    "v4": PromptSpec(
+        name="v4",
+        notes=(
+            "v3 plus a per-field evidence quote for the top-level amounts, a self-check that the "
+            "line totals add up, and one repair round when they do not."
+        ),
+        use_ocr_text=True,
+        fewshot_k=3,
+        use_evidence=True,
+        consistency_check=True,
+    ),
 }
 
 
