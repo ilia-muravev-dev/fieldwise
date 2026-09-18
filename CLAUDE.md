@@ -9,6 +9,8 @@ and `web/` (Next.js). Postgres with pgvector and Redis run from `docker-compose.
 - `cd backend && uv run fieldwise --help` — the CLI: `db`, `schemas`, `ingest`, `ocr`, `extract`, `eval`
 - `uv run fieldwise eval run --prompt v1 --limit 20 --cassette record` — measure; `eval compare a b` — the README table
 - Tests: `uv run pytest` (unit) — integration tests need Docker and are marked `integration`
+- Web: `just web` (dev server on :3000, proxies `/api` to :8000), `just web-check`; the typed client in
+  `web/src/lib/api/schema.d.ts` is generated from `openapi.json` — never edit it by hand
 
 ## Rules of the codebase
 - Evals first: any change to a prompt, the schema compiler or a matcher must be re-measured, and the

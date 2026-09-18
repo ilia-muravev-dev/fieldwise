@@ -19,3 +19,19 @@ updates:
     directory: /backend
     schedule:
       interval: monthly
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: monthly
+    groups:
+      web-dependencies:
+        patterns: ['*']
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: docker
+    directory: /web
+    schedule:
+      interval: monthly
