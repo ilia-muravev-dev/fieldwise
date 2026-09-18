@@ -27,3 +27,5 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run mypy
       - run: uv run pytest --cov --cov-report=term-missing
+      - name: The committed API contract is current
+        run: uv run fieldwise openapi /tmp/openapi.json && diff -q /tmp/openapi.json ../openapi.json

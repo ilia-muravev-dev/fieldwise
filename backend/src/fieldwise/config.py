@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     openai_base_url: str = "https://openrouter.ai/api/v1"
     openai_api_key: str | None = Field(default=None, repr=False)
 
+    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     log_level: str = "INFO"
 
 

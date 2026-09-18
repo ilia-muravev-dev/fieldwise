@@ -30,6 +30,8 @@ dependencies = [
   "jsonschema>=4.26,<5",
   "openai>=2,<3",
   "fastembed>=0.8,<1",
+  "celery[redis]>=5.6,<6",
+  "python-multipart>=0.0.32,<1",
 ]
 
 [project.scripts]
@@ -47,6 +49,7 @@ dev = [
   "boto3-stubs[s3]>=1.43,<2",
   "pyarrow-stubs>=20",
   "types-jsonschema>=4.25",
+  "celery-types>=0.23",
 ]
 
 [tool.uv]
