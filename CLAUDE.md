@@ -11,6 +11,7 @@ and `web/` (Next.js). Postgres with pgvector and Redis run from `docker-compose.
 - Tests: `uv run pytest` (unit) — integration tests need Docker and are marked `integration`
 - Web: `just web` (dev server on :3000, proxies `/api` to :8000), `just web-check`; the typed client in
   `web/src/lib/api/schema.d.ts` is generated from `openapi.json` — never edit it by hand
+- End to end: `just app-e2e` (the stack with `LLM_PROVIDER=fake`), then `just e2e` (Playwright)
 
 ## Rules of the codebase
 - Evals first: any change to a prompt, the schema compiler or a matcher must be re-measured, and the

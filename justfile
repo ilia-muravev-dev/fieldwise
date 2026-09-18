@@ -11,9 +11,13 @@ up:
 app:
     docker compose --profile app up -d --build --wait
 
+# The whole stack with the fake model provider (what the e2e tests run against)
+app-e2e:
+    docker compose -f docker-compose.yml -f docker-compose.e2e.yml --profile app up -d --build --wait
+
 # Stop everything
 down:
-    docker compose --profile app down
+    docker compose -f docker-compose.yml -f docker-compose.e2e.yml --profile app down
 
 # Lint, types and tests for the backend
 backend-check:
@@ -50,6 +54,10 @@ check: backend-check openapi-check web-check
 # Run the web app locally (proxies /api to :8000)
 web:
     cd web && pnpm dev
+
+# Browser smoke test against the running stack (`just app-e2e` first)
+e2e:
+    cd web && pnpm e2e
 
 # Run the API locally with reload
 api:

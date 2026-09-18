@@ -1,0 +1,8 @@
+# `just app-e2e`: the same stack with the fake model provider, so the end-to-end tests need no key.
+services:
+  api:
+    environment:
+      LLM_PROVIDER: fake
+  worker:
+    environment:
+      LLM_PROVIDER: fake

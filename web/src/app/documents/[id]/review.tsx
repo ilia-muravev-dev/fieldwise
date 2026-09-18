@@ -45,12 +45,10 @@ export function Review({ documentId }: { documentId: string }) {
   const [editing, setEditing] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-  // Default to the newest run; follow newly queued runs.
+  // Default to the newest run once; a run queued from this page selects itself.
   useEffect(() => {
     const newest = runs.data?.[0];
-    if (newest && (selectedRunId === null || !runs.data?.some((r) => r.id === selectedRunId))) {
-      setSelectedRunId(newest.id);
-    }
+    if (newest && selectedRunId === null) setSelectedRunId(newest.id);
   }, [runs.data, selectedRunId]);
 
   const run = useRun(selectedRunId);
