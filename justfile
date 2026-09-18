@@ -40,6 +40,10 @@ web-check:
 web-client:
     cd web && pnpm gen:api
 
+# Rebuild the gate bundle from the local database (after re-ingesting or changing OCR)
+gate-build:
+    cd backend && uv run fieldwise gate build --limit 20
+
 # Everything CI runs
 check: backend-check openapi-check web-check
 

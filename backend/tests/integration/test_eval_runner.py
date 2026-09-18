@@ -41,7 +41,9 @@ def labelled(session: Session, storage: LocalStorage) -> None:
 
 def test_oracle_and_null_baseline(session: Session, storage: LocalStorage, labelled: None) -> None:
     schema = sync_builtins(session)[0]
-    golden_by_sha = {d.sha256: g for d, g in labelled_documents(session, schema, "test")}
+    golden_by_sha = {
+        d.external_id or d.sha256: g for d, g in labelled_documents(session, schema, "test")
+    }
     oracle = FakeProvider(lambda req: golden_by_sha[req.cache_key["document"]])
 
     run = run_eval(session, storage, EvalConfig(model="claude-sonnet-5", concurrency=1), oracle)
@@ -70,8 +72,8 @@ def test_failures_go_to_the_sidecar_not_the_score(
 ) -> None:
     schema = sync_builtins(session)[0]
     docs = labelled_documents(session, schema, "test")
-    golden_by_sha = {d.sha256: g for d, g in docs}
-    first_sha = docs[0][0].sha256
+    golden_by_sha = {d.external_id or d.sha256: g for d, g in docs}
+    first_sha = docs[0][0].external_id or docs[0][0].sha256
 
     def flaky(request: LLMRequest) -> dict[str, object]:
         if request.cache_key["document"] == first_sha:
@@ -93,7 +95,9 @@ def test_batch_mode_and_reports(
     session: Session, storage: LocalStorage, labelled: None, tmp_path: Path
 ) -> None:
     schema = sync_builtins(session)[0]
-    golden_by_sha = {d.sha256: g for d, g in labelled_documents(session, schema, "test")}
+    golden_by_sha = {
+        d.external_id or d.sha256: g for d, g in labelled_documents(session, schema, "test")
+    }
     provider = FakeProvider(lambda req: golden_by_sha[req.cache_key["document"]])
     statuses: list[str] = []
 

@@ -25,6 +25,7 @@ from fieldwise.extraction.factory import build_provider, describe
 from fieldwise.extraction.pipeline import ExtractionOptions, prepare_extraction, run_extraction
 from fieldwise.extraction.pricing import price_for
 from fieldwise.extraction.prompts.registry import get_prompt
+from fieldwise.gate.bundle import GateBaseline, build_bundle, compare_to_baseline, load_bundle
 from fieldwise.logging import configure_logging
 from fieldwise.retrieval.embeddings import FastEmbedder
 from fieldwise.retrieval.fewshot import embed_documents, make_retriever
@@ -37,11 +38,15 @@ schemas_app = typer.Typer(help="Extraction schemas.", no_args_is_help=True)
 ingest_app = typer.Typer(help="Import documents and golden labels.", no_args_is_help=True)
 ocr_app = typer.Typer(help="Run OCR over stored documents.", no_args_is_help=True)
 eval_app = typer.Typer(help="Measure a configuration on a labelled split.", no_args_is_help=True)
+gate_app = typer.Typer(
+    help="The CI eval gate: replayed responses re-scored against a baseline.", no_args_is_help=True
+)
 app.add_typer(db_app, name="db")
 app.add_typer(schemas_app, name="schemas")
 app.add_typer(ingest_app, name="ingest")
 app.add_typer(ocr_app, name="ocr")
 app.add_typer(eval_app, name="eval")
+app.add_typer(gate_app, name="gate")
 console = Console()
 
 
@@ -458,6 +463,93 @@ def eval_compare(
         path = REPORTS_DIR / ("compare-" + "-".join(str(r.id)[:8] for r in found) + ".md")
         path.write_text(markdown, encoding="utf-8")
         console.print(f"written: {path.relative_to(REPORTS_DIR.parents[1])}")
+
+
+GATE_DIR = Path(__file__).resolve().parents[2] / "evals" / "gate"
+BASELINE_PATH = Path(__file__).resolve().parents[2] / "evals" / "baseline.json"
+
+
+@gate_app.command("build")
+def gate_build(
+    limit: Annotated[int, typer.Option(help="Documents in the bundle.")] = 20,
+    split: Annotated[str, typer.Option(help="Split to take them from.")] = "test",
+    out: Annotated[Path, typer.Option(help="Bundle directory.")] = GATE_DIR,
+) -> None:
+    """Write the fixture bundle (downscaled images, OCR, golden labels) from the local database."""
+    with session_factory()() as session:
+        schema_row = get_schema(session, "receipt")
+        if schema_row is None:
+            raise typer.BadParameter("receipt schema missing; run `fieldwise schemas sync`")
+        count = build_bundle(session, get_storage(), schema_row, out, split=split, limit=limit)
+    console.print(f"bundle: {count} documents in {out}")
+
+
+@gate_app.command("run")
+def gate_run(
+    *,
+    prompt: Annotated[str, typer.Option(help="Prompt version to replay.")] = "v2",
+    model: Annotated[
+        str | None, typer.Option(help="Model the cassettes were recorded with.")
+    ] = None,
+    provider: Annotated[
+        str | None, typer.Option(help="Provider the cassettes were recorded with.")
+    ] = None,
+    bundle: Annotated[Path, typer.Option(help="Bundle directory.")] = GATE_DIR,
+    baseline: Annotated[Path, typer.Option(help="Baseline JSON.")] = BASELINE_PATH,
+    tolerance: Annotated[float, typer.Option(help="Allowed drop, absolute accuracy.")] = 0.02,
+    write: Annotated[bool, typer.Option(help="Write the new numbers as the baseline.")] = False,
+) -> None:
+    """Load the bundle, replay recorded responses, re-score, and fail on a regression."""
+    settings = get_settings()
+    llm = build_provider(settings, provider_name=provider, cassette_mode="replay")
+    storage = get_storage()
+    with session_factory()() as session:
+        schema_row = get_schema(session, "receipt")
+        if schema_row is None:
+            raise typer.BadParameter("receipt schema missing; run `fieldwise schemas sync`")
+        loaded = load_bundle(session, storage, schema_row, bundle)
+        session.commit()
+        console.print(f"bundle loaded: {loaded} new document(s)")
+        config = EvalConfig(
+            prompt=prompt,
+            model=model or settings.default_model,
+            effort=settings.default_effort,
+            split="test",
+            concurrency=1,
+            notes="ci gate (replay)",
+        )
+        run = run_eval(session, storage, config, llm)
+        session.commit()
+        print_summary(console, run)
+        current = GateBaseline(
+            prompt=run.prompt_version,
+            model=run.model,
+            overall_accuracy=run.overall_accuracy,
+            value_accuracy=run.value_accuracy,
+            doc_exact_rate=run.doc_exact_rate,
+            per_field={path: stats.get("accuracy") for path, stats in run.per_field.items()},
+            lists={path: stats.get("exact_rate") for path, stats in run.lists.items()},
+        )
+    if run.succeeded == 0:
+        console.print(
+            "[red]nothing was scored — are the cassettes for this prompt/model recorded?[/red]"
+        )
+        raise typer.Exit(code=2)
+    if write or not baseline.exists():
+        baseline.parent.mkdir(parents=True, exist_ok=True)
+        baseline.write_text(json.dumps(current.to_dict(), indent=2, sort_keys=True) + "\n")
+        console.print(f"[green]baseline written to {baseline}[/green]")
+        return
+    previous = GateBaseline.from_dict(json.loads(baseline.read_text()))
+    problems = compare_to_baseline(current, previous, tolerance)
+    if problems:
+        console.print(f"[red]regression against {baseline.name} (tolerance {tolerance:.0%}):[/red]")
+        for line in problems:
+            console.print(f"  [red]{line}[/red]")
+        raise typer.Exit(code=1)
+    console.print(
+        f"[green]no regression against {baseline.name} (tolerance {tolerance:.0%})[/green]"
+    )
 
 
 if __name__ == "__main__":

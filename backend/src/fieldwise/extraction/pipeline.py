@@ -109,7 +109,8 @@ def prepare_extraction(
         effort=options.effort,
         max_tokens=options.max_tokens,
         cache_key={
-            "document": document.sha256,
+            # Stable across re-imports and downscaled fixture copies of dataset documents.
+            "document": document.external_id or document.sha256,
             "schema": f"{schema.name}@{schema.version}",
             "ocr_text": str(use_ocr_text),
         },

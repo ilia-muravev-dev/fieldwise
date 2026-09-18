@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "cord-v2/test/0013",
+    "fewshot": "",
+    "ocr_text": "True",
+    "prompt": "v2",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 17355,
+    "request_id": "gen-1789741168-iDZHnCQYo5CgiP5GOFFr",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": null,\n  \"cash_paid\": 52000,\n  \"change\": 700,\n  \"discount\": null,\n  \"item_count\": null,\n  \"line_items\": [\n    {\n      \"line_total\": 43000,\n      \"name\": \"BASO KUAH\",\n      \"quantity\": 1,\n      \"unit_price\": 43000\n    },\n    {\n      \"line_total\": 3000,\n      \"name\": \"A.MINERAL GELAS\",\n      \"quantity\": 1,\n      \"unit_price\": 3000\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": 46000,\n  \"tax\": 4664,\n  \"total\": 51300\n}",
+    "usage": {
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "input_tokens": 2467,
+      "output_tokens": 682
+    }
+  }
+}

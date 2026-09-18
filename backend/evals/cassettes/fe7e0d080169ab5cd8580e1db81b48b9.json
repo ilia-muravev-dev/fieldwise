@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "cord-v2/test/0019",
+    "fewshot": "",
+    "ocr_text": "False",
+    "prompt": "v1",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 24617,
+    "request_id": "gen-1789739779-BERP6IB9nV8EvfgUHycb",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": null,\n  \"cash_paid\": null,\n  \"change\": null,\n  \"discount\": null,\n  \"item_count\": null,\n  \"line_items\": [\n    {\n      \"line_total\": 60000,\n      \"name\": \"AMBUSH DBL CHS\",\n      \"quantity\": 4,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 100000,\n      \"name\": \"AMBUSH CHS BUR\",\n      \"quantity\": 10,\n      \"unit_price\": null\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": 160000,\n  \"tax\": 16000,\n  \"total\": 176000\n}",
+    "usage": {
+      "cache_read_tokens": 960,
+      "cache_write_tokens": 0,
+      "input_tokens": 545,
+      "output_tokens": 748
+    }
+  }
+}

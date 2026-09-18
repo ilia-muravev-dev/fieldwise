@@ -1,0 +1,25 @@
+{
+  "doc_exact_rate": 0.5,
+  "lists": {
+    "line_items": 0.6666666666666666
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "overall_accuracy": 0.910828025477707,
+  "per_field": {
+    "card_paid": 1.0,
+    "cash_paid": 1.0,
+    "change": 0.9444444444444444,
+    "discount": 0.9444444444444444,
+    "item_count": 1.0,
+    "line_items[].line_total": 0.8421052631578947,
+    "line_items[].name": 0.8157894736842105,
+    "line_items[].quantity": 0.8947368421052632,
+    "line_items[].unit_price": 0.8421052631578947,
+    "service_charge": 1.0,
+    "subtotal": 0.8888888888888888,
+    "tax": 1.0,
+    "total": 0.9444444444444444
+  },
+  "prompt": "v2",
+  "value_accuracy": 0.9505494505494505
+}

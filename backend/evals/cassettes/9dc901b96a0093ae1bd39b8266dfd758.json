@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "cord-v2/test/0006",
+    "fewshot": "",
+    "ocr_text": "False",
+    "prompt": "v1",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 31311,
+    "request_id": "gen-1789739093-NPaJFoT56zHlqouZvbDX",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": null,\n  \"cash_paid\": 50000,\n  \"change\": 4000,\n  \"discount\": null,\n  \"item_count\": null,\n  \"line_items\": [\n    {\n      \"line_total\": 13000,\n      \"name\": \"EGG TART\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 24000,\n      \"name\": \"CHOCO CUSTARD PASTRY\",\n      \"quantity\": 2,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 9000,\n      \"name\": \"REDBEAN BREAD\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": null,\n  \"tax\": null,\n  \"total\": 46000\n}",
+    "usage": {
+      "cache_read_tokens": 960,
+      "cache_write_tokens": 0,
+      "input_tokens": 1139,
+      "output_tokens": 1040
+    }
+  }
+}
