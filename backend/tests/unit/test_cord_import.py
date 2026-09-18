@@ -57,6 +57,22 @@ def test_map_gt_parse_accepts_single_menu_dict_and_list_sections() -> None:
     assert golden["item_count"] == 2
 
 
+def test_map_gt_parse_falls_back_to_the_item_subtotal() -> None:
+    golden = map_gt_parse(
+        {
+            "menu": {
+                "nm": "BLUS WANITA",
+                "unitprice": "@120,000",
+                "cnt": "1",
+                "itemsubtotal": "120,000",
+            }
+        }
+    )
+    assert golden["line_items"] == [
+        {"name": "BLUS WANITA", "quantity": 1, "unit_price": 120000.0, "line_total": 120000.0}
+    ]
+
+
 def test_map_gt_parse_of_empty_ground_truth() -> None:
     golden = map_gt_parse({})
     assert golden["line_items"] == []

@@ -80,6 +80,8 @@ class GoldenLabel(Base):
     )
     schema_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("schemas.id", ondelete="CASCADE"))
     data: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    # The dataset's own annotation, kept so labels can be re-mapped when the mapper improves.
+    raw: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     source: Mapped[str] = mapped_column(String(16))  # dataset | correction
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, server_default=func.now()

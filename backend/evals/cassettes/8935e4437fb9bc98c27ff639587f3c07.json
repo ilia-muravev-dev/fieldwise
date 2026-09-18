@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "d92479ab212713e7a65e56aacc5e68c0713597476608cbc394d997971043010b",
+    "fewshot": "",
+    "ocr_text": "True",
+    "prompt": "v2",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 19656,
+    "request_id": "gen-1789741133-AHf2tGXd21Bfh3Zuxj7K",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": null,\n  \"cash_paid\": 230000,\n  \"change\": 0,\n  \"discount\": null,\n  \"item_count\": null,\n  \"line_items\": [\n    {\n      \"line_total\": 230000,\n      \"name\": \"BANABERRY FRESH CREAM CAK\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": null,\n  \"tax\": null,\n  \"total\": 230000\n}",
+    "usage": {
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "input_tokens": 1868,
+      "output_tokens": 380
+    }
+  }
+}

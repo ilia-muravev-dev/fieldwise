@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from fieldwise.db.models import Document, GoldenLabel
-from fieldwise.documents.cord_import import CordRow, import_rows
+from fieldwise.documents.cord_import import CordRow, import_rows, remap_labels
 from fieldwise.documents.service import create_document
 from fieldwise.schemas.registry import get_schema, load_builtin, sync_builtins, upsert_schema
 from fieldwise.storage import LocalStorage
@@ -74,3 +74,20 @@ def test_import_rows_creates_documents_with_golden_labels(
     by_doc = {label.document_id: label.data for label in labels}
     assert by_doc[documents[0].id]["line_items"][0]["line_total"] == 1000.0
     assert by_doc[documents[1].id]["total"] == 2000.0
+
+
+def test_remap_labels_recomputes_data_from_the_raw_annotation(
+    session: Session, storage: LocalStorage
+) -> None:
+    schema = sync_builtins(session)[0]
+    row = CordRow("validation", 0, _jpeg(30), {"total": {"total_price": "Rp. 111,000"}})
+    import_rows(session, storage, iter([row]), schema)
+    label = session.scalars(select(GoldenLabel)).one()
+    assert label.raw == {"total": {"total_price": "Rp. 111,000"}}
+    assert label.data["total"] == 111000.0
+
+    label.data = {**label.data, "total": 111.0}  # what an older parser produced
+    session.flush()
+    assert remap_labels(session, schema) == 1
+    assert session.scalars(select(GoldenLabel)).one().data["total"] == 111000.0
+    assert remap_labels(session, schema) == 0

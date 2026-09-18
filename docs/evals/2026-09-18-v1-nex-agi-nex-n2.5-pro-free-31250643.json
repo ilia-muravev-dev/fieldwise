@@ -1,5 +1,5 @@
 {
-  "id": "37d35c46-e332-46f8-b2ce-4ad893f3357f",
+  "id": "31250643-4256-4370-9daa-14e04f23d605",
   "prompt_version": "v1",
   "model": "nex-agi/nex-n2.5-pro:free",
   "effort": "low",
@@ -13,10 +13,10 @@
   "succeeded": 19,
   "truncated": 1,
   "failed": 0,
-  "overall_accuracy": 0.8338028169014085,
-  "lenient_accuracy": 0.8450704225352113,
-  "value_accuracy": 0.8514851485148515,
-  "doc_exact_rate": 0.3157894736842105,
+  "overall_accuracy": 0.8450704225352113,
+  "lenient_accuracy": 0.856338028169014,
+  "value_accuracy": 0.8627450980392157,
+  "doc_exact_rate": 0.3684210526315789,
   "cost_usd": 0.0,
   "cost_per_doc": 0.0,
   "p50_ms": 29585,
@@ -42,17 +42,17 @@
     "total": {
       "matcher": "money",
       "n": 19,
-      "accuracy": 0.7368421052631579,
+      "accuracy": 0.7894736842105263,
       "ci": [
-        0.5120803155892935,
-        0.8819376166045982
+        0.5666528575973392,
+        0.9149246150840843
       ],
-      "lenient": 0.7368421052631579,
+      "lenient": 0.7894736842105263,
       "value_n": 18,
-      "value_accuracy": 0.7222222222222222,
+      "value_accuracy": 0.7777777777777778,
       "counts": {
-        "wrong": 4,
-        "correct": 13,
+        "wrong": 3,
+        "correct": 14,
         "null_match": 1,
         "missing": 1
       }
@@ -129,18 +129,18 @@
     "cash_paid": {
       "matcher": "money",
       "n": 19,
-      "accuracy": 0.8421052631578947,
+      "accuracy": 0.8947368421052632,
       "ci": [
-        0.6243407235682331,
-        0.9447962896007217
+        0.686054495051583,
+        0.9706420586049034
       ],
-      "lenient": 0.8421052631578947,
+      "lenient": 0.8947368421052632,
       "value_n": 14,
-      "value_accuracy": 0.7857142857142857,
+      "value_accuracy": 0.8571428571428571,
       "counts": {
         "null_match": 5,
-        "correct": 11,
-        "wrong": 3
+        "correct": 12,
+        "wrong": 2
       }
     },
     "item_count": {
@@ -196,18 +196,18 @@
     "line_items[].line_total": {
       "matcher": "money",
       "n": 46,
-      "accuracy": 0.6956521739130435,
+      "accuracy": 0.7391304347826086,
       "ci": [
-        0.5519408125976183,
-        0.8092032919255109
+        0.5974057019172069,
+        0.8439926480555066
       ],
-      "lenient": 0.6956521739130435,
-      "value_n": 38,
-      "value_accuracy": 0.8421052631578947,
+      "lenient": 0.7391304347826086,
+      "value_n": 40,
+      "value_accuracy": 0.85,
       "counts": {
         "wrong": 6,
-        "correct": 32,
-        "spurious": 8
+        "correct": 34,
+        "spurious": 6
       }
     },
     "line_items[].unit_price": {
@@ -248,13 +248,13 @@
   "lists": {
     "line_items": {
       "docs": 19,
-      "exact_rate": 0.3684210526315789,
+      "exact_rate": 0.42105263157894735,
       "ci": [
-        0.19149272376273843,
-        0.5896084250184328
+        0.2314162039203038,
+        0.6372444853483988
       ],
-      "item_precision": 0.6086956521739131,
-      "item_recall": 0.7,
+      "item_precision": 0.6521739130434783,
+      "item_recall": 0.75,
       "golden_items": 40,
       "predicted_items": 46
     }
@@ -266,6 +266,6 @@
       "error": "stop_reason=max_tokens"
     }
   ],
-  "created_at": "2026-09-18T13:58:19.022229+00:00",
-  "notes": "v1 baseline, free model, reasoning effort low"
+  "created_at": "2026-09-18T14:06:22.813765+00:00",
+  "notes": "v1 baseline, re-scored after the golden parser fix (Rp. prefix)"
 }

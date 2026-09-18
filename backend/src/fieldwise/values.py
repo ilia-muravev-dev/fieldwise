@@ -27,7 +27,8 @@ def parse_money(raw: object) -> Decimal | None:
 def _parse_money_text(raw: str) -> Decimal | None:
     text = _MONEY_JUNK.sub("", raw)
     negative = text.startswith("-") or (text.startswith("(") and text.endswith(")"))
-    digits = text.strip("-()")
+    # "Rp. 111,000" leaves a stray leading "."; a separator at either end is never a separator.
+    digits = text.strip("-()").strip(".,")
     if not any(ch.isdigit() for ch in digits):
         return None
     try:

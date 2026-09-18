@@ -118,12 +118,15 @@ def map_gt_parse(gt_parse: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(raw, dict):
             continue
         quantity = parse_int(raw.get("cnt"))
+        line_total = _money(raw.get("price"))
+        if line_total is None:  # some receipts only print the item subtotal
+            line_total = _money(raw.get("itemsubtotal"))
         items.append(
             {
                 "name": _text(raw.get("nm")),
                 "quantity": quantity if quantity is not None else 1,
                 "unit_price": _money(raw.get("unitprice")),
-                "line_total": _money(raw.get("price")),
+                "line_total": line_total,
             }
         )
     sub_total = _first_dict(gt_parse.get("sub_total"))
@@ -186,6 +189,7 @@ def import_rows(
                     document_id=document.id,
                     schema_id=schema.id,
                     data=map_gt_parse(row.gt_parse),
+                    raw=row.gt_parse,
                     source="dataset",
                 )
             )
@@ -207,3 +211,22 @@ def import_split(
         raise RuntimeError("receipt schema missing from the database; run `fieldwise schemas sync`")
     paths = download_split(split)
     return import_rows(session, storage, iter_rows(split, paths), schema, limit=limit)
+
+
+def remap_labels(session: Session, schema: Schema) -> int:
+    """Re-runs the mapper over stored raw annotations (after a mapper or parser fix)."""
+    labels = session.scalars(
+        select(GoldenLabel).where(
+            GoldenLabel.schema_id == schema.id, GoldenLabel.source == "dataset"
+        )
+    ).all()
+    changed = 0
+    for label in labels:
+        if label.raw is None:
+            continue
+        data = map_gt_parse(label.raw)
+        if data != label.data:
+            label.data = data
+            changed += 1
+    session.flush()
+    return changed

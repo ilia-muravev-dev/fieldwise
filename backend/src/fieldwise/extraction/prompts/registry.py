@@ -27,6 +27,15 @@ class PromptSpec:
 
 PROMPTS: dict[str, PromptSpec] = {
     "v1": PromptSpec(name="v1", notes="Baseline: instructions and the schema; the image only."),
+    "v2": PromptSpec(
+        name="v2",
+        notes=(
+            "OCR text in reading order next to the image; explicit rules for thousands "
+            "separators, names copied as printed, sub-items folded into their parent, "
+            "subtotal vs total, null when absent."
+        ),
+        use_ocr_text=True,
+    ),
 }
 
 

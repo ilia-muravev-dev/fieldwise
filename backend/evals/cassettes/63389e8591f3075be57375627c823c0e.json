@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "8f3eee7068c96e86cdb2e4b5c53085cb5e1439462edd55c373548cb1962801ad",
+    "fewshot": "",
+    "ocr_text": "True",
+    "prompt": "v2",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 50625,
+    "request_id": "gen-1789740831-bcvX0iD5MKru8lYpy0It",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": null,\n  \"cash_paid\": 200000,\n  \"change\": 28400,\n  \"discount\": 19400,\n  \"item_count\": null,\n  \"line_items\": [\n    {\n      \"line_total\": 82000,\n      \"name\": \"ICE BLACKCOFFE\",\n      \"quantity\": 2,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 61000,\n      \"name\": \"AVOCADO COFFEE\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    },\n    {\n      \"line_total\": 51000,\n      \"name\": \"CHIKEN KATSU FF\",\n      \"quantity\": 1,\n      \"unit_price\": null\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": 194000,\n  \"tax\": null,\n  \"total\": 174600\n}",
+    "usage": {
+      "cache_read_tokens": 1280,
+      "cache_write_tokens": 0,
+      "input_tokens": 1284,
+      "output_tokens": 1648
+    }
+  }
+}
