@@ -4,7 +4,10 @@ import { chromium } from "@playwright/test";
 const [docId, evalIds] = process.argv.slice(2);
 const base = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+const page = await browser.newPage({
+  viewport: { width: 1440, height: 900 },
+  deviceScaleFactor: 1,
+});
 
 await page.goto(`${base}/documents/${docId}`);
 await page.getByText("succeeded", { exact: true }).first().waitFor();
