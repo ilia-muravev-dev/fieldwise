@@ -30,6 +30,38 @@ jobs:
       - name: The committed API contract is current
         run: uv run fieldwise openapi /tmp/openapi.json && diff -q /tmp/openapi.json ../openapi.json
 
+  eval-gate:
+    name: Eval gate — replayed responses re-scored against the baseline
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: fieldwise
+          POSTGRES_PASSWORD: fieldwise
+          POSTGRES_DB: fieldwise
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fieldwise -d fieldwise"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://fieldwise:fieldwise@localhost:5432/fieldwise
+      STORAGE_URL: file:///tmp/fieldwise-storage
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --frozen
+      - run: uv run fieldwise db upgrade && uv run fieldwise schemas sync
+      - name: Replay the recorded responses and compare with evals/baseline.json
+        run: uv run fieldwise gate run --prompt v2 --provider openai --model nex-agi/nex-n2.5-pro:free
+
   web:
     name: Web — biome, types, vitest, build, generated client current
     runs-on: ubuntu-latest

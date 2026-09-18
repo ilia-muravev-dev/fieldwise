@@ -161,7 +161,9 @@ def test_evals_endpoints(
         json.loads((FIXTURES / f"{stem}.json").read_text()),
     )
     import_rows(session, storage, iter([row]), schema)
-    golden_by_sha = {d.sha256: g for d, g in labelled_documents(session, schema, "test")}
+    golden_by_sha = {
+        d.external_id or d.sha256: g for d, g in labelled_documents(session, schema, "test")
+    }
     run = run_eval(
         session,
         storage,

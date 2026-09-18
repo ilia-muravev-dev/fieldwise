@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "cord-v2/test/0012",
+    "fewshot": "",
+    "ocr_text": "True",
+    "prompt": "v2",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 15463,
+    "request_id": "gen-1789741153-9NZvdNeDPgxuQsUrcwQS",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": 120000,\n  \"cash_paid\": null,\n  \"change\": 0,\n  \"discount\": null,\n  \"item_count\": 2,\n  \"line_items\": [\n    {\n      \"line_total\": 120000,\n      \"name\": \"BLUS WANITA\",\n      \"quantity\": 1,\n      \"unit_price\": 120000\n    },\n    {\n      \"line_total\": 0,\n      \"name\": \"SHOPPING BAG\",\n      \"quantity\": 1,\n      \"unit_price\": 880\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": null,\n  \"tax\": null,\n  \"total\": 120000\n}",
+    "usage": {
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "input_tokens": 1921,
+      "output_tokens": 594
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "key": {
+    "document": "cord-v2/test/0000",
+    "fewshot": "",
+    "ocr_text": "False",
+    "prompt": "v1",
+    "schema": "receipt@1"
+  },
+  "model": "nex-agi/nex-n2.5-pro:free",
+  "response": {
+    "cost_usd": 0.0,
+    "extra": {
+      "json_mode": "schema"
+    },
+    "latency_ms": 35882,
+    "request_id": "gen-1789739899-tzgMM9DtUgjFDVAxax51",
+    "served_model": "nex-agi/nex-n2.5-pro:free",
+    "stop_reason": "end_turn",
+    "text": "{\n  \"card_paid\": 60,\n  \"cash_paid\": null,\n  \"change\": null,\n  \"discount\": -60,\n  \"item_count\": 2,\n  \"line_items\": [\n    {\n      \"line_total\": 60,\n      \"name\": \"-TICKET CP\",\n      \"quantity\": 2,\n      \"unit_price\": 60\n    }\n  ],\n  \"service_charge\": null,\n  \"subtotal\": 60,\n  \"tax\": 5.455,\n  \"total\": 60\n}",
+    "usage": {
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "input_tokens": 1299,
+      "output_tokens": 1343
+    }
+  }
+}
