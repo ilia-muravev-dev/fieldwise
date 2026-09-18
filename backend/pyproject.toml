@@ -16,6 +16,12 @@ dependencies = [
   "typer>=0.27,<1",
   "rich>=15,<16",
   "structlog>=26,<27",
+  "pgvector>=0.5,<1",
+  "pypdfium2>=5.13,<6",
+  "pillow>=12,<13",
+  "pyarrow>=25,<26",
+  "huggingface-hub>=0.35,<2",
+  "boto3>=1.43,<2",
 ]
 
 [project.scripts]
@@ -29,6 +35,9 @@ dev = [
   "pytest-cov>=7,<8",
   "httpx2>=2.13,<3",
   "testcontainers[postgres]>=4.15,<5",
+  "moto[s3]>=5,<6",
+  "boto3-stubs[s3]>=1.43,<2",
+  "pyarrow-stubs>=20",
 ]
 
 [build-system]
@@ -44,7 +53,7 @@ target-version = "py312"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "PT", "ANN", "TCH", "PL", "S"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "PT", "ANN", "PL", "S"]
 ignore = [
   "PLR0913", # many arguments are fine for explicit pipelines
   "PLR2004", # magic numbers in tests and pricing tables
@@ -65,7 +74,7 @@ packages = ["fieldwise"]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["testcontainers.*"]
+module = ["testcontainers.*", "pypdfium2.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

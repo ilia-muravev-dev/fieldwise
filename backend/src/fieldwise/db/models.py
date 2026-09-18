@@ -1,0 +1,89 @@
+"""ORM models. Migrations live in fieldwise/db/migrations and are written by hand."""
+
+import uuid
+from datetime import UTC, datetime
+from typing import Any
+
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+EMBEDDING_DIM = 384  # BAAI/bge-small-en-v1.5 via fastembed
+
+
+def utcnow() -> datetime:
+    return datetime.now(UTC)
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Schema(Base):
+    """A versioned extraction schema: the authored JSON Schema plus per-field matcher metadata."""
+
+    __tablename__ = "schemas"
+    __table_args__ = (UniqueConstraint("name", "version", name="uq_schemas_name_version"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(64))
+    version: Mapped[int] = mapped_column(Integer)
+    json_schema: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    field_meta: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=func.now()
+    )
+
+    golden_labels: Mapped[list["GoldenLabel"]] = relationship(back_populates="schema")
+
+
+class Document(Base):
+    """An uploaded or imported document, its rendered pages and OCR output."""
+
+    __tablename__ = "documents"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255))
+    source: Mapped[str] = mapped_column(String(16))  # upload | cord
+    external_id: Mapped[str | None] = mapped_column(String(128), unique=True)
+    split: Mapped[str | None] = mapped_column(String(16))  # train | validation | test
+    mime: Mapped[str] = mapped_column(String(64))
+    sha256: Mapped[str] = mapped_column(String(64), unique=True)
+    storage_key: Mapped[str] = mapped_column(String(255))
+    page_count: Mapped[int] = mapped_column(Integer)
+    pages: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
+    ocr_status: Mapped[str] = mapped_column(String(16), default="pending")
+    ocr_text: Mapped[str | None] = mapped_column(Text)
+    ocr_words: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=func.now()
+    )
+
+    golden_labels: Mapped[list["GoldenLabel"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan"
+    )
+
+
+class GoldenLabel(Base):
+    """Ground truth for a document under a schema: from the dataset, or a reviewer's correction."""
+
+    __tablename__ = "golden_labels"
+    __table_args__ = (
+        UniqueConstraint("document_id", "schema_id", "source", name="uq_golden_doc_schema_source"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    schema_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("schemas.id", ondelete="CASCADE"))
+    data: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    source: Mapped[str] = mapped_column(String(16))  # dataset | correction
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=func.now()
+    )
+
+    document: Mapped[Document] = relationship(back_populates="golden_labels")
+    schema: Mapped[Schema] = relationship(back_populates="golden_labels")

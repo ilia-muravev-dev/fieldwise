@@ -1,0 +1,23 @@
+{
+  "menu": [
+    {
+      "nm": "POTATO SAUSAGE BREAD",
+      "cnt": "1",
+      "price": "19,000"
+    },
+    {
+      "nm": "OREO GREEN TEA SPREAD",
+      "cnt": "1",
+      "price": "52,000"
+    },
+    {
+      "nm": "WHITE CHOCO BANANA SPREAD",
+      "cnt": "1",
+      "price": "52,000"
+    }
+  ],
+  "total": {
+    "total_price": "123,000",
+    "creditcardprice": "123,000"
+  }
+}
